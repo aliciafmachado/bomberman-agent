@@ -17,7 +17,7 @@ class BombermanEnv(gym.Env):
     """
 
     metadata = {
-        'render.modes': ['human'],
+        'render.modes': ['human', 'stdout'],
         'available_board_sizes': [(11, 13), (5, 7)]
     }
 
@@ -33,30 +33,48 @@ class BombermanEnv(gym.Env):
             custom_map: if given a path, it will load a custom map from a txt
             random_seed: numpy random seed for reproducibility
         """
+        self.custom_map = custom_map
+
         np.random.seed(random_seed)
-        # map creation
+        # Map creation
         if custom_map:
             self.map = self.__create_map_from_file(custom_map)
             self.size = (self.map.shape[0], self.map.shape[1])
         else:
-            # TODO
-            # implement a more generalist map construction
             if size not in BombermanEnv.metadata['available_board_sizes']:
-                print(size)
                 raise Exception("Map of size {} not implemented".format(size))
             self.size = size
             self.map = self.__create_map_from_scratch()
-        # bomb timer creation
+            self.original_map = np.copy(self.map)
+        # Bomb timer creation
         self.bombs = []
     
     def step(self, action):
         raise NotImplementedError
 
-    def reset(self):
-        raise NotImplementedError
+    def reset(self, new_map=False) -> NDArray[bool]:
+        """
+        :param new_map: if True generate new positions for the breakable blocks
+        :return: map a numpy array which contains the description of the current state
+        """
+        if new_map:
+            if self.custom_map:
+                raise Exception("Can't cresate new map in custom map environment")
+            self.map = self.__create_map_from_scratch()
+            self.original_map = np.copy(self.map)
+        else:
+            self.map = np.copy(self.original_map)
+
+        return np.copy(self.map)
     
     def render(self, mode='human'):
-        raise NotImplementedError
+        # Verifies if rendering mode is allowed
+        if mode not in BombermanEnv.metadata['render.modes']:
+            raise ValueError
+        if mode == "stdout":
+            pass
+        elif mode == "human":
+            raise NotImplementedError
 
     def close(self):
         raise NotImplementedError
