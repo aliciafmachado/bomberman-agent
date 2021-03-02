@@ -13,5 +13,7 @@ setup(name='bomberman_rl',
       install_requires=[
             'gym',
             'nptyping'
-      ]
+      ],
+      setup_requires=['pytest-runner'],
+      tests_require=['pytest']
 )
