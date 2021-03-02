@@ -4,6 +4,14 @@ import numpy as np
 
 
 class BombermanEnv(gym.Env):
-    # TODO this is just a test to see that gym is detecting this evironment
-    def test(self):
-        return "test fine"
+    metadata = {'render.modes': ['human']}
+    def __init__(self):
+        raise NotImplementedError
+    def step(self, action):
+        raise NotImplementedError
+    def reset(self):
+        raise NotImplementedError
+    def render(self, mode='human'):
+        raise NotImplementedError
+    def close(self):
+        raise NotImplementedError
