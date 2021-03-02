@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-setup(name='bomberman-agent',
+setup(name='bomberman_rl',
       version='0.1.0.dev',
       author="Alicia Fortes Machado, Aloysio Galvão Lopes, Iago Martinelli Lopes, Igor Albuquerque Silva",
       description="DQN to play bomberman",
