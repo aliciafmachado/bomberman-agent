@@ -1,10 +1,10 @@
 from nptyping import NDArray
 import os
 
+from .conventions import FIXED_BLOCK, BLOCK, CHARACTER, BOMB, FIRE
+
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 import pygame
-
-from .Action import Action
 
 
 class Renderer:
@@ -22,30 +22,27 @@ class Renderer:
             self.__display = pygame.display.set_mode((self.__width, self.__height),
                                                      pygame.RESIZABLE, 32)
             self.__clock = pygame.time.Clock()
+        elif mode == 'print':
+            self.__unicodes = {FIXED_BLOCK: '\u2588', BLOCK: '\u2591',
+                               CHARACTER: '\u263A', BOMB: '\u2299', FIRE: '*'}
+            self.__order = [CHARACTER, BOMB, FIRE, BLOCK, FIXED_BLOCK]
 
-    def render(self, action: Action = Action.STOP):
+    def render(self, action: int = 0):
         if self.__mode == 'draw':
             self.__render_draw(action)
         elif self.__mode == 'print':
             self.__render_print()
 
-    def __render_draw(self, action: Action):
+    def __render_draw(self, action: int):
         pass
 
     def __render_print(self):
-        unicodes = {'fixed_block': '\u2588', 'block': '\u2591', 'player': '\u263A',
-                    'bomb': '\u2299', 'fire': '*'}
-        # FIXME: standardize word_idx
-        world_idx = {'fixed_block': 0, 'block': 1, 'player': 2, 'bomb': 3, 'fire': 4}
-        order = ['player', 'bomb', 'fire', 'block', 'fixed_block']
-        n, m = self.__world.shape[0:2]
-
         for i in range(self.__world.shape[0]):
             for j in range(self.__world.shape[1]):
                 printed = False
-                for o in order:
-                    if self.__world[i][j][world_idx[o]]:
-                        print(unicodes[o], end='')
+                for o in self.__order:
+                    if self.__world[i][j][o]:
+                        print(self.__unicodes[o], end='')
                         printed = True
                         break
                 if not printed:
