@@ -3,7 +3,7 @@
 
 # Importing libraries:
 import torch.nn as nn
-from bomberman-agent.utils.dqn_utils import conv2d_output
+from bomberman_rl.utils.dqn_utils import conv2d_output
 
 
 class DQNModel(nn.Module):
