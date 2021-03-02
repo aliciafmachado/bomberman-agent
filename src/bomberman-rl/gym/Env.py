@@ -33,6 +33,10 @@ class Env(gym.Env):
             self.map = self.__create_map_from_file(custom_map)
             self.size = (self.map.shape[0], self.map.shape[1])
         else:
+            # TODO
+            # implement a more generalist map construction
+            if size != (11, 13) or size != (5, 7):
+                raise Exception("Map of size {} not implemented".format(size))
             self.size = size
             self.map = self.__create_map_from_scratch()
         # bomb timer creation
@@ -45,12 +49,48 @@ class Env(gym.Env):
         pass
 
     def __create_map_from_file(self, custom_map: str) -> NDArray[bool]:
-        pass
-    
-    def __create_map_from_scratch(self) -> NDArray[bool]:
-        m, n = self.size
+        # open file
+        f = open(custom_map, "r")
+        prov_map = []
+        for line in f:
+            l = line.split()
+            prov_map.append(l)
+        f.close()
+        m, n = len(prov_map), len(prov_map[0])
+        map = np.zeros((m, n, 5))
         for i in range(m):
             for j in range(n):
-                
-
+                value = prov_map[i][j]
+                if value == '1':
+                    map[i, j, 0] = 1
+                elif value == 'S':
+                    map[i, j, 1] = 1
+                elif value == 'P':
+                    map[i, j, 2] = 1
+        return map
+        
+    def __create_map_from_scratch(self) -> NDArray[bool]:
+        m, n = self.size
+        map = np.zeros((m, n, 5))
+        # walls
+        map[0, :, 0] = 1
+        map[-1, :, 0] = 1
+        map[:, 0, 0] = 1
+        map[:, -1, 0] = 1
+        # fixed blocks
+        rows = [2*i for i in range(1, m//2)]
+        cols = [2*i for i in range(1, n//2)]
+        tuples = [(r, c, 0) for r in rows for c in cols]
+        for t in tuples:
+            map[t] = 1
+        # player position
+        map[1, 1, 2] = 1
+        # soft blocks
+        for i in range(1, m - 1):
+            for j in range(1, n - 1):
+                # avoid certain positions
+                if (i, j) in [(1, 1), (1, 2), (2, 1)] or map[i, j, 0] == 1:
+                    continue
+                map[i, j, 1] = np.random.rand() > 0.4
+        return map
     
