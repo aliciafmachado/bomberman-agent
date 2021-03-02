@@ -4,7 +4,7 @@ import numpy as np
 from typing import List, Optional, Tuple
 from nptyping import NDArray
 
-class Env(gym.Env):
+class BombermanEnv(gym.Env):
     """
     Bomberman Environment:
 
@@ -15,7 +15,13 @@ class Env(gym.Env):
                    map[:, :, 3] = bomb position                  (B)
                    map[:, :, 4] = fire position                  (F)
     """
-    def __init__(self, size: Optional(Tuple[int, int]) = (11, 13),
+
+    metadata = {
+        'render.modes': ['human'],
+        'available_board_sizes': [(11, 13), (5, 7)]
+    }
+
+    def __init__(self, size: Optional[Tuple[int, int]] = (11, 13),
                        display: bool = False, 
                        custom_map: Optional[str]=None, 
                        random_seed: int = 42):
@@ -35,7 +41,8 @@ class Env(gym.Env):
         else:
             # TODO
             # implement a more generalist map construction
-            if size != (11, 13) or size != (5, 7):
+            if size not in BombermanEnv.metadata['available_board_sizes']:
+                print(size)
                 raise Exception("Map of size {} not implemented".format(size))
             self.size = size
             self.map = self.__create_map_from_scratch()
@@ -43,10 +50,16 @@ class Env(gym.Env):
         self.bombs = []
     
     def step(self, action):
-        pass
+        raise NotImplementedError
 
     def reset(self):
-        pass
+        raise NotImplementedError
+    
+    def render(self, mode='human'):
+        raise NotImplementedError
+
+    def close(self):
+        raise NotImplementedError
 
     def __create_map_from_file(self, custom_map: str) -> NDArray[bool]:
         # open file

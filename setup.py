@@ -11,6 +11,7 @@ setup(name='bomberman_rl',
       packages=find_packages("src"),
       python_requires='>=3.6',
       install_requires=[
-            'gym'
+            'gym',
+            'nptyping'
       ]
 )

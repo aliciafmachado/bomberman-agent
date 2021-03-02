@@ -1,6 +1,6 @@
 import gym
 
-env = gym.make("bomberman_rl:bomberman-v0")
+env = gym.make("bomberman_rl:bomberman-default-v0")
 
 print(env.reset())
 
