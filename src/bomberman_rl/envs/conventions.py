@@ -15,3 +15,12 @@ FIRE = 4
 
 # Block sprite size
 BLOCK_SIZE = 16
+
+# Fire position
+CENTER = 0
+HORIZONTAL = 1
+VERTICAL = 2
+END_LEFT = 3
+END_RIGHT = 4
+END_UP = 5
+END_DOWN = 6
