@@ -3,8 +3,9 @@ import numpy as np
 from typing import Optional, Tuple
 from nptyping import NDArray
 
-from .conventions import FIXED_BLOCK, BLOCK, CHARACTER, PLACE_BOMB
+from .conventions import FIXED_BLOCK, BLOCK, CHARACTER, PLACE_BOMB, FIRE
 from .game_objects.bomb import Bomb
+from .game_objects.fire import Fire
 from .game_objects.character import Character
 from .renderer import Renderer
 
@@ -40,6 +41,8 @@ class BombermanEnv(gym.Env):
         """
         self.custom_map = custom_map
         self.initial_pos = np.array([1, 1], dtype=np.int8)
+        self.bomb_duration = 3
+        self.bomb_range = 3
 
         np.random.seed(random_seed)
         # Map creation
@@ -54,7 +57,8 @@ class BombermanEnv(gym.Env):
             self.original_map = np.copy(self.map)
 
         self.game_objects = {'characters': [Character(self.initial_pos)],
-                             'bombs': []}
+                             'bombs': [],
+                             'fires': []}
 
         self.renderer = Renderer(self.map, self.game_objects, display)
 
@@ -67,16 +71,21 @@ class BombermanEnv(gym.Env):
             self.game_objects['bombs'].append(
                 Bomb(self.game_objects['characters'][0].get_pos()))
 
-        # Update bombs timers and fire
+        # Update bombs
         waiting = []
-        self.map[self.size[0], self.size[1], :] = np.zeros(self.size)
         for i in range(len(self.game_objects['bombs'])):
             if self.game_objects['bombs'][i].update(self.map):
                 waiting.append(i)
             else:
-                # TODO: place fire
-                pass
+                self.game_objects['fires'].append(
+                    Fire(self.game_objects['bombs'][i].get_pos(), self.bomb_duration, self.bomb_range, self.map))
+
         self.game_objects['bombs'] = [self.game_objects['bombs'][i] for i in waiting]
+
+        # Update fires
+        self.map[:, :, FIRE] = np.zeros(self.size)
+        for fire in self.game_objects['fires']:
+            fire.update()
 
         # Update character
         done = not self.game_objects['characters'][0].update(action, self.map)
@@ -86,6 +95,7 @@ class BombermanEnv(gym.Env):
         # TODO: Getting reward
 
         # return observation, reward, done, info
+        return observation
 
     def reset(self, new_map=False) -> NDArray[bool]:
         """

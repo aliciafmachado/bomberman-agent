@@ -1,7 +1,11 @@
+from nptyping import NDArray
+import numpy as np
+
 from bomberman_rl.envs.game_objects.game_object import GameObject
 
 from bomberman_rl.envs.conventions import LEFT, RIGHT, DOWN, UP, \
     FIXED_BLOCK, BLOCK, BOMB, FIRE, BLOCK_SIZE
+
 
 class Fire(GameObject):
     """
@@ -12,7 +16,7 @@ class Fire(GameObject):
                 DOWN: np.array([1, 0], dtype=np.int8),
                 UP: np.array([-1, 0], dtype=np.int8)}
 
-    def __init__(self,  pos: NDArray[np.int8], duration, tiles, world):
+    def __init__(self, pos: NDArray[np.int8], duration, tiles, world):
         """
         :param pos: The center of the fire
         :param duration: for how many time
@@ -33,6 +37,7 @@ class Fire(GameObject):
         """
         self.__timer -= 1
         self.__add__fire_to_map()
+        return self.__timer
 
     def __add__fire_to_map(self):
         """
@@ -46,15 +51,15 @@ class Fire(GameObject):
         Gets all of the coordinates that belong to the fire
         :return:
         """
-
-        coordinates = [np.copy(self.__pos)]
+        coordinates = [np.copy(self._pos)]
 
         # Grows the fire in each direction
         for dir in Fire.dir_dict:
             hit = False
-            fire_pos = self.__pos
-            for i in range(tiles):
-                if hit: break
+            fire_pos = self._pos
+            for i in range(self.__tiles):
+                if hit:
+                    break
                 fire_pos = fire_pos + Fire.dir_dict[dir]
                 # TODO elaborate these interactions
                 if self.__world[fire_pos[0], fire_pos[1], FIXED_BLOCK]:
@@ -64,4 +69,3 @@ class Fire(GameObject):
                 coordinates.append(fire_pos)
 
         return coordinates
-
