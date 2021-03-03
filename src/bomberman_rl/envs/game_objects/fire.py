@@ -62,8 +62,6 @@ class Fire(GameObject):
             fire_pos = self._pos
             for i in range(self.__tiles):
                 if hit:
-                    if not self.__reward_given:
-                        self.__owner.break_block()
                     break
                 fire_pos = fire_pos + Fire.dir_dict[dir]
                 # TODO elaborate these interactions
@@ -72,6 +70,10 @@ class Fire(GameObject):
                 if self.__world[fire_pos[0], fire_pos[1], BLOCK]:
                     hit = True
                 coordinates.append(fire_pos)
+
+            # Adding reward to player
+            if not self.__reward_given and hit:
+                self.__owner.break_block()
 
         self.__reward_given = True
 
