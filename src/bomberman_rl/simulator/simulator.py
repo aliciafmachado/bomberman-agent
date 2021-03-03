@@ -39,3 +39,7 @@ class Simulator:
             self.__env.render()
             time.sleep(1/self.__speed)
             print('\033c')
+
+    def reset(self, actions):
+        self.__actions = actions
+        self.__env.reset()

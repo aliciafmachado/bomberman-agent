@@ -52,39 +52,34 @@ class Character(GameObject):
         reward = self.__current_reward
         self.__current_reward = 0
 
+        # Remove player from map
         world[self._pos[0], self._pos[1], CHARACTER] = False
+        self.__stopped = True
 
         if self.__dead:
-            self.__stopped = True
             return False, reward
 
-        if action == STOP or action == PLACE_BOMB:
-            self.__stopped = True
-        else:
-            self.__stopped = False
-
+        # If player needs to move and it's able to move
+        if action not in (STOP, PLACE_BOMB):
             # Get direction caused by the action
             self.__dir = self.dir_dict[action]
 
-            # Update pos
             next_pos = self._pos + self.__dir
-            next_pos_objects = world[next_pos[0], next_pos[1]]
 
-            # Check for collision with fire
-            if next_pos_objects[FIRE]:
-                self.__dead = True
+            # Check for collision with blocks/bomb
+            candidate_pos_objects = world[next_pos[0], next_pos[1]]
+            obstacles = FIXED_BLOCK, BLOCK, BOMB
+            if not any([candidate_pos_objects[o] for o in obstacles]):
+                self.__stopped = False
                 self._pos = next_pos
-            else:
-                # Check for collision with blocks/bomb
-                obstacles = FIXED_BLOCK, BLOCK, BOMB
-                for o in obstacles:
-                    if next_pos_objects[o]:
-                        self.__stopped = True
 
-                if not self.__stopped:
-                    self._pos = next_pos
+        # Check if there's fire in the next position
+        if world[self._pos[0], self._pos[1], FIRE]:
+            self.__dead = True
+            return False, reward
 
         world[self._pos[0], self._pos[1], CHARACTER] = True
+
         return True, reward
 
     def render(self, display: pygame.display, sprites_factory: SpritesFactory,

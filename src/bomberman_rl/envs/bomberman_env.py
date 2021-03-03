@@ -61,6 +61,7 @@ class BombermanEnv(gym.Env):
                              'fires': []}
 
         self.renderer = Renderer(self.map, self.game_objects, display)
+        self.__display = display
 
     def step(self, action: int):
         """
@@ -91,6 +92,10 @@ class BombermanEnv(gym.Env):
                 fires_indexes_to_keep.append(i)
         self.game_objects['fires'] = [self.game_objects['fires'][i] for i in fires_indexes_to_keep]
 
+        p = self.game_objects['characters'][0].get_pos()
+        if self.map[p[0], p[1], FIRE]:
+            print("fire !")
+
         # Update character
         died, reward = self.game_objects['characters'][0].update(action, self.map)
         done = not died
@@ -107,14 +112,17 @@ class BombermanEnv(gym.Env):
         """
         if new_map:
             if self.custom_map:
-                raise Exception("Can't cresate new map in custom map environment")
+                raise Exception("Can't create new map in custom map environment")
             self.map = self.__create_map_from_scratch()
             self.original_map = np.copy(self.map)
         else:
             self.map = np.copy(self.original_map)
 
         self.game_objects = {'characters': [Character(self.initial_pos)],
-                             'bombs': []}
+                             'bombs': [],
+                             'fires': []}
+
+        self.renderer = Renderer(self.map, self.game_objects, self.__display)
 
         return np.copy(self.map)
 
