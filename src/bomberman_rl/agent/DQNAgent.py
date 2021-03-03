@@ -126,4 +126,3 @@ class DQNAgent():
             # We take a random action
             return torch.tensor([[random.randrange(self.n_actions)]], 
                 device=self.device, dtype=torch.long)
-        

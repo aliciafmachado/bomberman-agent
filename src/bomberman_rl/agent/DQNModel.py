@@ -12,7 +12,10 @@ class DQNModel(nn.Module):
 
     def __init__(self, height, width, n_dim, n_actions=6):
         '''
-
+        @param height: height of the environemnt frame
+        @param width: width of the environment frame
+        @param n_dim: Number of frames for each state
+        @param n_actions: Number of possible actions
         '''
         self.conv1 = nn.Conv2d(n_dim, 8, kernel_size=3, stride=1)
         self.bn1 = nn.BatchNorm2d(8)
@@ -34,5 +37,3 @@ class DQNModel(nn.Module):
         x = F.relu(self.bn3(self.conv3(x)))
 
         return self.linear(x.view(x.size(0), -1))
-
-    

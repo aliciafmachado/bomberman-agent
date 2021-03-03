@@ -2,7 +2,8 @@ import gym
 import pytest
 import unittest
 
-from bomberman_rl.envs.Renderer import Renderer
+from bomberman_rl.envs.renderer import Renderer
+
 
 class Case(unittest.TestCase):
     @pytest.fixture(autouse=True)
@@ -27,7 +28,7 @@ class Case(unittest.TestCase):
         trues = [(5, 5, 3), (7, 7, 4), (7, 8, 4), (7, 9, 4)]
         for t in trues:
             env.map[t] = True
-        r.render(0)
+        r.render()
 
         # Capture print output
         captured = self.capsys.readouterr()
