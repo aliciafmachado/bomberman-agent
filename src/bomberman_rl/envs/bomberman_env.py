@@ -1,17 +1,21 @@
 import gym
-from gym import spaces
 import numpy as np
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 from nptyping import NDArray
+
+from .conventions import FIXED_BLOCK, BLOCK, CHARACTER
+from .game_objects.character import Character
+from .renderer import Renderer
+
 
 class BombermanEnv(gym.Env):
     """
     Bomberman Environment:
 
-    Possible actions: left (0), up (1), right (2), down (3), put bomb (4)
-    Map 3D Matrix: map[:, :, 0] = indestructible blocks position (1)
-                   map[:, :, 1] = soft blocks position           (S)
-                   map[:, :, 2] = player position                (P)
+    Possible actions: stop(0), left (1), right (2), up (3), down (4), place bomb (5)
+    Map 3D Matrix: map[:, :, 0] = fixed blocks position (1)
+                   map[:, :, 1] = normal blocks position           (S)
+                   map[:, :, 2] = character position               (P)
                    map[:, :, 3] = bomb position                  (B)
                    map[:, :, 4] = fire position                  (F)
     """
@@ -22,9 +26,9 @@ class BombermanEnv(gym.Env):
     }
 
     def __init__(self, size: Optional[Tuple[int, int]] = (11, 13),
-                       display: bool = False, 
-                       custom_map: Optional[str]=None, 
-                       random_seed: int = 42):
+                 display: str = None,
+                 custom_map: Optional[str] = None,
+                 random_seed: int = 42):
         """
         Environment constructor
         Args:
@@ -46,11 +50,17 @@ class BombermanEnv(gym.Env):
             self.size = size
             self.map = self.__create_map_from_scratch()
             self.original_map = np.copy(self.map)
-        # Bomb timer creation
-        self.bombs = []
+
+        # bomb timer creation
+        # self.bombs = []
+
+        self.character = Character(np.array([1, 1], dtype=np.int8))
+        self.game_objects = [self.character]
+
+        self.renderer = Renderer(self.map, self.game_objects, display)
     
-    def step(self, action):
-        raise NotImplementedError
+    def step(self, action: int):
+        self.character.update(action, self.map)
 
     def reset(self, new_map=False) -> NDArray[bool]:
         """
@@ -66,15 +76,9 @@ class BombermanEnv(gym.Env):
             self.map = np.copy(self.original_map)
 
         return np.copy(self.map)
-    
+
     def render(self, mode='human'):
-        # Verifies if rendering mode is allowed
-        if mode not in BombermanEnv.metadata['render.modes']:
-            raise ValueError
-        if mode == "stdout":
-            pass
-        elif mode == "human":
-            raise NotImplementedError
+        self.renderer.render()
 
     def close(self):
         raise NotImplementedError
@@ -93,35 +97,34 @@ class BombermanEnv(gym.Env):
             for j in range(n):
                 value = prov_map[i][j]
                 if value == '1':
-                    map[i, j, 0] = 1
+                    map[i, j, FIXED_BLOCK] = 1
                 elif value == 'S':
-                    map[i, j, 1] = 1
+                    map[i, j, BLOCK] = 1
                 elif value == 'P':
-                    map[i, j, 2] = 1
+                    map[i, j, CHARACTER] = 1
         return map
-        
+
     def __create_map_from_scratch(self) -> NDArray[bool]:
         m, n = self.size
         map = np.zeros((m, n, 5))
         # walls
-        map[0, :, 0] = 1
-        map[-1, :, 0] = 1
-        map[:, 0, 0] = 1
-        map[:, -1, 0] = 1
+        map[0, :, FIXED_BLOCK] = 1
+        map[-1, :, FIXED_BLOCK] = 1
+        map[:, 0, FIXED_BLOCK] = 1
+        map[:, -1, FIXED_BLOCK] = 1
         # fixed blocks
-        rows = [2*i for i in range(1, m//2)]
-        cols = [2*i for i in range(1, n//2)]
-        tuples = [(r, c, 0) for r in rows for c in cols]
+        rows = [2 * i for i in range(1, m // 2)]
+        cols = [2 * i for i in range(1, n // 2)]
+        tuples = [(r, c, FIXED_BLOCK) for r in rows for c in cols]
         for t in tuples:
             map[t] = 1
         # player position
-        map[1, 1, 2] = 1
+        map[1, 1, CHARACTER] = 1
         # soft blocks
         for i in range(1, m - 1):
             for j in range(1, n - 1):
                 # avoid certain positions
-                if (i, j) in [(1, 1), (1, 2), (2, 1)] or map[i, j, 0] == 1:
+                if (i, j) in [(1, 1), (1, 2), (2, 1)] or map[i, j, FIXED_BLOCK]:
                     continue
-                map[i, j, 1] = np.random.rand() > 0.4
+                map[i, j, BLOCK] = np.random.rand() > 0.4
         return map
-    

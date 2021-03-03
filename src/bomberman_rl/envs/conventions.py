@@ -12,3 +12,6 @@ BLOCK = 1
 CHARACTER = 2
 BOMB = 3
 FIRE = 4
+
+# Block sprite size
+BLOCK_SIZE = 16
