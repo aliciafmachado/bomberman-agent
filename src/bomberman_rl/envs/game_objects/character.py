@@ -35,6 +35,8 @@ class Character(GameObject):
         self.__stopped = True
         self.__animation_idx = 0
         self.__dead = False
+        self.__dying = False
+        self.__animation_dying_idx = 0
         self.__block_break_cumulative_reward = 0
 
         # Rewards
@@ -96,6 +98,10 @@ class Character(GameObject):
         """
         screen_pos = self._pos.copy().astype(np.float)
         screen_pos[0] -= 0.25  # Character sprite is 25% taller than blocks
+        
+        # in case of death
+        if self.__dead:
+            sprite_name = 'bomberman_'
 
         # Get correct animation frame
         sprite_name = 'bomberman_'
