@@ -1,5 +1,4 @@
 import gym
-from gym import spaces
 import numpy as np
 from typing import Optional, Tuple
 from nptyping import NDArray
@@ -68,8 +67,9 @@ class BombermanEnv(gym.Env):
             self.game_objects['bombs'].append(
                 Bomb(self.game_objects['characters'][0].get_pos()))
 
-        # Update bombs timers
+        # Update bombs timers and fire
         waiting = []
+        self.map[self.size[0], self.size[1], :] = np.zeros(self.size)
         for i in range(len(self.game_objects['bombs'])):
             if self.game_objects['bombs'][i].update(self.map):
                 waiting.append(i)

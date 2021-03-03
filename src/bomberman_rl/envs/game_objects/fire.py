@@ -23,8 +23,7 @@ class Fire(GameObject):
         self.__timer = duration
         self.__tiles = tiles
         self.__world = world
-        self.__add__fire_to_map()
-
+        self.__occupied_tiles = self.__get_fire_coordinates()
 
     def update(self):
         """
@@ -33,13 +32,13 @@ class Fire(GameObject):
         :return:
         """
         self.__timer -= 1
-
+        self.__add__fire_to_map()
 
     def __add__fire_to_map(self):
         """
         Adds this fire to the map
         """
-        for coord in self.__get_fire_coordinates():
+        for coord in self.__occupied_tiles:
             self.__world[coord[0], coord[1], FIRE] = True
 
     def __get_fire_coordinates(self):
@@ -64,5 +63,5 @@ class Fire(GameObject):
                     hit = True
                 coordinates.append(fire_pos)
 
-
+        return coordinates
 
