@@ -78,7 +78,8 @@ class BombermanEnv(gym.Env):
                 waiting.append(i)
             else:
                 self.game_objects['fires'].append(
-                    Fire(self.game_objects['bombs'][i].get_pos(), self.bomb_duration, self.bomb_range, self.map))
+                    Fire(self.game_objects['bombs'][i].get_pos(), self.bomb_duration,
+                         self.bomb_range, self.map, self.game_objects['characters'][0]))
 
         self.game_objects['bombs'] = [self.game_objects['bombs'][i] for i in waiting]
 
@@ -91,14 +92,13 @@ class BombermanEnv(gym.Env):
         self.game_objects['fires'] = [self.game_objects['fires'][i] for i in fires_indexes_to_keep]
 
         # Update character
-        done = not self.game_objects['characters'][0].update(action, self.map)
+        died, reward = self.game_objects['characters'][0].update(action, self.map)
+        done = not died
 
+        # Get observation from map
         observation = np.copy(self.map)
 
-        # TODO: Getting reward
-
-        # return observation, reward, done, info
-        return observation
+        return observation, reward, done, {}
 
     def reset(self, new_map=False) -> NDArray[bool]:
         """

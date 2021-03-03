@@ -16,7 +16,7 @@ class Fire(GameObject):
                 DOWN: np.array([1, 0], dtype=np.int8),
                 UP: np.array([-1, 0], dtype=np.int8)}
 
-    def __init__(self, pos: NDArray[np.int8], duration, tiles, world):
+    def __init__(self, pos: NDArray[np.int8], duration, tiles, world, owner):
         """
         :param pos: The center of the fire
         :param duration: for how many time
@@ -27,6 +27,8 @@ class Fire(GameObject):
         self.__timer = duration
         self.__tiles = tiles
         self.__world = world
+        self.__owner = owner
+        self.__reward_given = False
         self.__occupied_tiles = self.__get_fire_coordinates()
 
     def update(self):
@@ -60,6 +62,8 @@ class Fire(GameObject):
             fire_pos = self._pos
             for i in range(self.__tiles):
                 if hit:
+                    if not self.__reward_given:
+                        self.__owner.break_block()
                     break
                 fire_pos = fire_pos + Fire.dir_dict[dir]
                 # TODO elaborate these interactions
@@ -68,5 +72,7 @@ class Fire(GameObject):
                 if self.__world[fire_pos[0], fire_pos[1], BLOCK]:
                     hit = True
                 coordinates.append(fire_pos)
+
+        self.__reward_given = True
 
         return coordinates

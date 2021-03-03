@@ -1,4 +1,5 @@
 from nptyping import NDArray
+from typing import Tuple
 import numpy as np
 import os
 
@@ -34,8 +35,9 @@ class Character(GameObject):
         self.__stopped = True
         self.__animation_idx = 0
         self.__dead = False
+        self.__current_reward = 0
 
-    def update(self, action: int, world: NDArray[bool]) -> bool:
+    def update(self, action: int, world: NDArray[bool]) -> Tuple[bool, int]:
         """
         Updates the character's position according to its action and to the world.
         Args:
@@ -44,12 +46,17 @@ class Character(GameObject):
 
         Returns:
             alive: True if the character is still alive.
+            reward: The current reward
         """
+        # Getting current reward
+        reward = self.__current_reward
+        self.__current_reward = 0
+
         world[self._pos[0], self._pos[1], CHARACTER] = False
 
         if self.__dead:
             self.__stopped = True
-            return False
+            return False, reward
 
         if action == STOP or action == PLACE_BOMB:
             self.__stopped = True
@@ -78,7 +85,7 @@ class Character(GameObject):
                     self._pos = next_pos
 
         world[self._pos[0], self._pos[1], CHARACTER] = True
-        return True
+        return True, reward
 
     def render(self, display: pygame.display, sprites_factory: SpritesFactory,
                frames_per_step: int):
@@ -114,3 +121,6 @@ class Character(GameObject):
         # Draw sprite
         display.blit(sprites_factory[sprite_name], (screen_pos[1] * BLOCK_SIZE,
                                                     screen_pos[0] * BLOCK_SIZE))
+
+    def break_block(self):
+        self.__current_reward += 1
