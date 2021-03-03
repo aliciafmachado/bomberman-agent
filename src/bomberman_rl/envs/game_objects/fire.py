@@ -34,7 +34,7 @@ class Fire(GameObject):
         self.__world = world
         self.__owner = owner
         self.__reward_given = False
-        self.__occupied_tiles, self.break_blocks = self.__get_fire_coordinates()
+        self.__occupied_tiles, self.break_blocks, self.bombs_hit = self.__get_fire_coordinates()
         # animation assistance
         self.__animation_idx = 1
         self.__animation_end = False
@@ -111,6 +111,7 @@ class Fire(GameObject):
         coordinates = {}
         coordinates[tuple(np.copy(self._pos))] = CENTER
         blocks_hit = []
+        bombs_hit =[]
         # Grows the fire in each direction
         for dir in Fire.dir_dict:
             hit = False
@@ -125,6 +126,11 @@ class Fire(GameObject):
                 if self.__world[fire_pos[0], fire_pos[1], BLOCK]:
                     hit = True
                     blocks_hit.append(fire_pos)
+                    break
+                if self.__world[fire_pos[0], fire_pos[1], BOMB]:
+                    hit = True
+                    bombs_hit.append(fire_pos)
+                    break
                 if dir == LEFT or dir == RIGHT:
                     coordinates[tuple(np.copy(fire_pos))] = HORIZONTAL
                 elif dir == UP or dir == DOWN:
@@ -135,4 +141,4 @@ class Fire(GameObject):
 
         self.__reward_given = True
 
-        return coordinates, blocks_hit
+        return coordinates, blocks_hit, bombs_hit
