@@ -37,7 +37,7 @@ class Fire(GameObject):
         """
         self.__timer -= 1
         self.__add__fire_to_map()
-        return self.__timer
+        return self.__timer > 0
 
     def __add__fire_to_map(self):
         """
@@ -45,6 +45,7 @@ class Fire(GameObject):
         """
         for coord in self.__occupied_tiles:
             self.__world[coord[0], coord[1], FIRE] = True
+            self.__world[coord[0], coord[1], BLOCK] = False
 
     def __get_fire_coordinates(self):
         """

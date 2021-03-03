@@ -13,7 +13,8 @@ actions_dict = {
 }
 
 env = gym.make("bomberman_rl:bomberman-default-v0", display='print')
-actions = [STOP, DOWN, DOWN, PLACE_BOMB, RIGHT, RIGHT, DOWN, DOWN, STOP, STOP, STOP]
+actions = [STOP, DOWN, DOWN, PLACE_BOMB, RIGHT, RIGHT, DOWN, DOWN, STOP, STOP, STOP, STOP, STOP, PLACE_BOMB, UP, LEFT, LEFT, DOWN,
+           STOP, STOP, STOP]
 print('\033c')
 for i in range(len(actions)):
     print("Action: ", actions_dict[actions[i]])

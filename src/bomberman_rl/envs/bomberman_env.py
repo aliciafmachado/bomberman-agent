@@ -84,8 +84,11 @@ class BombermanEnv(gym.Env):
 
         # Update fires
         self.map[:, :, FIRE] = np.zeros(self.size)
-        for fire in self.game_objects['fires']:
-            fire.update()
+        fires_indexes_to_keep = []
+        for i in range(len(self.game_objects['fires'])):
+            if self.game_objects['fires'][i].update():
+                fires_indexes_to_keep.append(i)
+        self.game_objects['fires'] = [self.game_objects['fires'][i] for i in fires_indexes_to_keep]
 
         # Update character
         done = not self.game_objects['characters'][0].update(action, self.map)
