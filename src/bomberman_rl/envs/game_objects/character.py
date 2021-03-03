@@ -5,12 +5,13 @@ import os
 from bomberman_rl.envs.conventions import STOP, PLACE_BOMB, LEFT, RIGHT, DOWN, UP, \
     FIXED_BLOCK, BLOCK, BOMB, FIRE, BLOCK_SIZE
 from bomberman_rl.envs.sprites_factory import SpritesFactory
+from bomberman_rl.envs.game_objects.game_object import GameObject
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 import pygame
 
 
-class Character:
+class Character(GameObject):
     """
     Contains character's position and movement info, its collision with fire and blocks,
     and the animation rendering.
@@ -28,7 +29,7 @@ class Character:
         Args:
             pos: Tile i, j in the game map.
         """
-        self.__pos = pos
+        super().__init__(pos)
         self.__dir = self.dir_dict[DOWN]
         self.__stopped = True
         self.__animation_idx = 0
