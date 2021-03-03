@@ -35,7 +35,12 @@ class Character(GameObject):
         self.__stopped = True
         self.__animation_idx = 0
         self.__dead = False
-        self.__current_reward = 0
+        self.__block_break_cumulative_reward = 0
+
+        # Rewards
+        self.__alive_reward = 0
+        self.__block_break_reward = 1
+        self.__dead_reward = -2
 
     def update(self, action: int, world: NDArray[bool]) -> Tuple[bool, int]:
         """
@@ -48,16 +53,13 @@ class Character(GameObject):
             alive: True if the character is still alive.
             reward: The current reward
         """
-        # Getting current reward
-        reward = self.__current_reward
-        self.__current_reward = 0
 
         # Remove player from map
         world[self._pos[0], self._pos[1], CHARACTER] = False
         self.__stopped = True
 
         if self.__dead:
-            return False, reward
+            return False, self.__get_reward()
 
         # If player needs to move and it's able to move
         if action not in (STOP, PLACE_BOMB):
@@ -76,11 +78,11 @@ class Character(GameObject):
         # Check if there's fire in the next position
         if world[self._pos[0], self._pos[1], FIRE]:
             self.__dead = True
-            return False, reward
+            return False, self.__get_reward()
 
         world[self._pos[0], self._pos[1], CHARACTER] = True
 
-        return True, reward
+        return True, self.__get_reward()
 
     def render(self, display: pygame.display, sprites_factory: SpritesFactory,
                frames_per_step: int):
@@ -118,4 +120,12 @@ class Character(GameObject):
                                                     screen_pos[0] * BLOCK_SIZE))
 
     def break_block(self):
-        self.__current_reward += 1
+        self.__block_break_cumulative_reward += self.__block_break_reward
+
+    def __get_reward(self):
+        if self.__dead:
+            return self.__dead_reward
+        else:
+            block_reward = self.__block_break_cumulative_reward
+            self.__block_break_cumulative_reward = 0
+            return self.__alive_reward + block_reward

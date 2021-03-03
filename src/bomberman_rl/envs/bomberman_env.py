@@ -92,10 +92,6 @@ class BombermanEnv(gym.Env):
                 fires_indexes_to_keep.append(i)
         self.game_objects['fires'] = [self.game_objects['fires'][i] for i in fires_indexes_to_keep]
 
-        p = self.game_objects['characters'][0].get_pos()
-        if self.map[p[0], p[1], FIRE]:
-            print("fire !")
-
         # Update character
         died, reward = self.game_objects['characters'][0].update(action, self.map)
         done = not died
