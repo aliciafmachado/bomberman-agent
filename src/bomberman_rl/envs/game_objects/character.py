@@ -110,3 +110,9 @@ class Character:
         # Draw sprite
         display.blit(sprites_factory[sprite_name], (screen_pos[1] * BLOCK_SIZE,
                                                     screen_pos[0] * BLOCK_SIZE))
+
+    def get_pos(self):
+        return self.__pos
+
+    def set_pos(self):
+        raise NotImplementedError

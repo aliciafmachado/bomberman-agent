@@ -1,4 +1,5 @@
 import gym
+from gym import spaces
 import numpy as np
 from typing import Optional, Tuple
 from nptyping import NDArray
@@ -14,8 +15,8 @@ class BombermanEnv(gym.Env):
 
     Possible actions: stop(0), left (1), right (2), up (3), down (4), place bomb (5)
     Map 3D Matrix: map[:, :, 0] = fixed blocks position (1)
-                   map[:, :, 1] = normal blocks position           (S)
-                   map[:, :, 2] = character position               (P)
+                   map[:, :, 1] = normal blocks position         (S)
+                   map[:, :, 2] = character position             (P)
                    map[:, :, 3] = bomb position                  (B)
                    map[:, :, 4] = fire position                  (F)
     """
@@ -38,6 +39,7 @@ class BombermanEnv(gym.Env):
             random_seed: numpy random seed for reproducibility
         """
         self.custom_map = custom_map
+        self.initial_pos = [1, 1]
 
         np.random.seed(random_seed)
         # Map creation
@@ -54,13 +56,34 @@ class BombermanEnv(gym.Env):
         # bomb timer creation
         # self.bombs = []
 
-        self.character = Character(np.array([1, 1], dtype=np.int8))
+        self.character = Character(np.array(self.initial_pos, dtype=np.int8))
         self.game_objects = [self.character]
 
         self.renderer = Renderer(self.map, self.game_objects, display)
-    
+
     def step(self, action: int):
+        """
+        :param action: next movement for the agent
+        :return: observation, reward, done and info
+        """
         self.character.update(action, self.map)
+
+        # Stepping all of the bombs (start and end explosions)
+
+        # Getting the next observation
+        old_pos = self.character.get_pos()
+        done = not self.character.update(action, self.map)
+        new_pos = self.character.get_pos()
+
+        self.map[old_pos[0], old_pos[1], CHARACTER] = 0
+        self.map[new_pos[0], new_pos[1], CHARACTER] = 1
+        observation = np.copy(self.map)
+
+        # Placing bomb if needed and if it's possible
+
+        # Getting reward
+
+        # return observation, reward, done, info
 
     def reset(self, new_map=False) -> NDArray[bool]:
         """
@@ -74,6 +97,8 @@ class BombermanEnv(gym.Env):
             self.original_map = np.copy(self.map)
         else:
             self.map = np.copy(self.original_map)
+
+        self.character.set_pos(self.initial_pos)
 
         return np.copy(self.map)
 
@@ -119,7 +144,7 @@ class BombermanEnv(gym.Env):
         for t in tuples:
             map[t] = 1
         # player position
-        map[1, 1, CHARACTER] = 1
+        map[self.initial_pos[0], self.initial_pos[1], CHARACTER] = 1
         # soft blocks
         for i in range(1, m - 1):
             for j in range(1, n - 1):
