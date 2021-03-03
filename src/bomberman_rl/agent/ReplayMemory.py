@@ -1,6 +1,9 @@
 # Replay memory, so that we store the previous simulations
 
-Transition = namedtuple('Transition',
+import random
+from collections import namedtuple
+
+Simulation = namedtuple('Simulation',
                         ('state', 'action', 'next_state', 'reward'))
 
 class ReplayMemory(object):
@@ -11,10 +14,10 @@ class ReplayMemory(object):
         self.position = 0
 
     def push(self, *args):
-        """Saves a transition."""
+        """Saves a simulation."""
         if len(self.memory) < self.capacity:
             self.memory.append(None)
-        self.memory[self.position] = Transition(*args)
+        self.memory[self.position] = Simulation(*args)
         self.position = (self.position + 1) % self.capacity
 
     def sample(self, batch_size):
