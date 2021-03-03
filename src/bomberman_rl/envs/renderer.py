@@ -1,5 +1,5 @@
 from nptyping import NDArray
-from typing import List
+from typing import Dict
 import os
 
 from .conventions import FIXED_BLOCK, BLOCK, CHARACTER, BOMB, FIRE, BLOCK_SIZE
@@ -14,7 +14,8 @@ class Renderer:
     Representation of the game for us to see.
     """
 
-    def __init__(self, world: NDArray[bool], game_objects: List = None, mode: str = None):
+    def __init__(self, world: NDArray[bool], game_objects: Dict = None,
+                 mode: str = None):
         """
         Default constructor.
         Args:
@@ -77,8 +78,10 @@ class Renderer:
                                             (BLOCK_SIZE * j, BLOCK_SIZE * i))
 
             # Draw game objects
-            for obj in self.__game_objects:
-                obj.render(self.__display, self.__sprites_factory, self.__frames_per_step)
+            for list_obj in self.__game_objects.values():
+                for obj in list_obj:
+                    obj.render(self.__display, self.__sprites_factory,
+                               self.__frames_per_step)
 
             pygame.display.flip()
             self.__clock.tick(self.__frames_per_step * self.__steps_per_sec)

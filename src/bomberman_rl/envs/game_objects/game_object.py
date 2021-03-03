@@ -1,3 +1,5 @@
+import numpy as np
+from nptyping import NDArray
 
 
 class GameObject:
@@ -8,7 +10,7 @@ class GameObject:
         """
         :param pos: game object's position
         """
-        self.__pos = pos
+        self._pos = pos
 
     def update(self, *args):
         """
@@ -21,3 +23,6 @@ class GameObject:
         Shows the object on the screen
         """
         raise NotImplementedError
+
+    def get_pos(self):
+        return self._pos

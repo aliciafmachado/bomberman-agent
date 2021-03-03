@@ -4,7 +4,8 @@ import numpy as np
 from typing import Optional, Tuple
 from nptyping import NDArray
 
-from .conventions import FIXED_BLOCK, BLOCK, CHARACTER
+from .conventions import FIXED_BLOCK, BLOCK, CHARACTER, PLACE_BOMB
+from .game_objects.bomb import Bomb
 from .game_objects.character import Character
 from .renderer import Renderer
 
@@ -39,7 +40,7 @@ class BombermanEnv(gym.Env):
             random_seed: numpy random seed for reproducibility
         """
         self.custom_map = custom_map
-        self.initial_pos = [1, 1]
+        self.initial_pos = np.array([1, 1], dtype=np.int8)
 
         np.random.seed(random_seed)
         # Map creation
@@ -53,11 +54,8 @@ class BombermanEnv(gym.Env):
             self.map = self.__create_map_from_scratch()
             self.original_map = np.copy(self.map)
 
-        # bomb timer creation
-        # self.bombs = []
-
-        self.character = Character(np.array(self.initial_pos, dtype=np.int8))
-        self.game_objects = [self.character]
+        self.game_objects = {'characters': [Character(self.initial_pos)],
+                             'bombs': []}
 
         self.renderer = Renderer(self.map, self.game_objects, display)
 
@@ -66,22 +64,26 @@ class BombermanEnv(gym.Env):
         :param action: next movement for the agent
         :return: observation, reward, done and info
         """
-        self.character.update(action, self.map)
+        if action == PLACE_BOMB:
+            self.game_objects['bombs'].append(
+                Bomb(self.game_objects['characters'][0].get_pos()))
 
-        # Stepping all of the bombs (start and end explosions)
+        # Update bombs timers
+        waiting = []
+        for i in range(len(self.game_objects['bombs'])):
+            if self.game_objects['bombs'][i].update(self.map):
+                waiting.append(i)
+            else:
+                # TODO: place fire
+                pass
+        self.game_objects['bombs'] = [self.game_objects['bombs'][i] for i in waiting]
 
-        # Getting the next observation
-        old_pos = self.character.get_pos()
-        done = not self.character.update(action, self.map)
-        new_pos = self.character.get_pos()
+        # Update character
+        done = not self.game_objects['characters'][0].update(action, self.map)
 
-        self.map[old_pos[0], old_pos[1], CHARACTER] = 0
-        self.map[new_pos[0], new_pos[1], CHARACTER] = 1
         observation = np.copy(self.map)
 
-        # Placing bomb if needed and if it's possible
-
-        # Getting reward
+        # TODO: Getting reward
 
         # return observation, reward, done, info
 
@@ -98,7 +100,8 @@ class BombermanEnv(gym.Env):
         else:
             self.map = np.copy(self.original_map)
 
-        self.character.set_pos(self.initial_pos)
+        self.game_objects = {'characters': [Character(self.initial_pos)],
+                             'bombs': []}
 
         return np.copy(self.map)
 
