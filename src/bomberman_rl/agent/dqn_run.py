@@ -27,7 +27,13 @@ def main():
 
     args = parser.parse_args()
 
-    # TODO: implement --save_model, --save_frequency, --seed, --retrain, --lr, etc
+    # TODO: implement --save_model, --save_frequency, --retrain, --lr, etc
+    # Args
+    if args.seed != None:
+        random.seed(args.seed)
+        torch.manual_seed(args.seed)
+    
+    # Create a transform to convert the matrix to a tensor
     transform = transforms.ToTensor()
 
     # Create environment
@@ -46,6 +52,7 @@ def main():
     for i_episode in range(args.nb_episodes):
         state = env.reset()
         done = False
+        loss = None
 
         while not done:
             # Select and perform an action
@@ -62,10 +69,15 @@ def main():
             # Next state
             state = next_state
 
-            if(len(memory) >= args.memory_size):
+            if len(memory) >= args.memory_size:
                 sample = self.memory.sample(args.batch_size)
                 batch = Simulation(*zip(*sample))
-                dqn_agent.train(batch, args.batch_size)
+                loss = dqn_agent.train(batch, args.batch_size)
+
+            if args.verbose == True:
+                print('Episode[{}/{}], Loss: {:.4f}, Buffer state[{}/{}]'.format(
+                        i_episode, args.nb_episodes,
+                        loss, len(memory), args.memory_size))
 
         # Update or not the targetNet
         if i_episode % self.target_update == 0: 
@@ -80,4 +92,4 @@ def main():
     print("Finished!")
 
 if __name__ == '__main__':
-        main()
+    main()
