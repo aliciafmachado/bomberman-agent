@@ -35,9 +35,8 @@ class Character(GameObject):
         self.__stopped = True
         self.__animation_idx = 0
         self.__dead = False
-        self.__dying = False
-        self.__animation_dying_idx = 0
         self.__block_break_cumulative_reward = 0
+        self.__animation_idx_death = 0
 
         # Rewards
         self.__alive_reward = 0
@@ -101,8 +100,14 @@ class Character(GameObject):
         
         # in case of death
         if self.__dead:
-            sprite_name = 'bomberman_'
-
+            if not self.__stopped:
+                screen_pos -= self.__dir * (
+                (1 - (self.__animation_idx % frames_per_step + 1) / frames_per_step))
+            sprite_name = 'bomberman_die' + str(self.__animation_idx_death % 3 + 1)
+            self.__animation_idx_death += 1
+            display.blit(sprites_factory[sprite_name], (screen_pos[1] * BLOCK_SIZE,
+                                                        screen_pos[0] * BLOCK_SIZE))
+            return
         # Get correct animation frame
         sprite_name = 'bomberman_'
         if self.__dir[0] == -1:

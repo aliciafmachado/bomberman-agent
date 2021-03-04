@@ -39,22 +39,20 @@ class BreakingBlock(GameObject):
 
         # Get correct animation sprite
         sprite_name = 'block_destroyed'
-        sprite_name += str(self.__animation_idx + 1)  # Animation frame
-        self.__animation_list[self.__animation_idx] += 1
-        if self.__animation_list[0] == 3:
-            self.__animation_idx += 1
+        sprite_name += str(self.__animation_list[self.__animation_idx])  # Animation frame
+        if self.__animation_list[0] < 2:
             self.__animation_list[0] += 1
-        elif self.__animation_list[1] == 3:
-            self.__animation_idx += 1
+        elif self.__animation_list[1] < 3:
+            self.__animation_idx = 1
             self.__animation_list[1] += 1
-        elif self.__animation_list[2] == 4:
-            self.__animation_idx += 1
+        elif self.__animation_list[2] < 4:
+            self.__animation_idx = 2 
             self.__animation_list[2] += 1
-        elif self.__animation_list[3] == 4:
-            self.__animation_idx += 1
+        elif self.__animation_list[3] < 4:
+            self.__animation_idx = 3
             self.__animation_list[3] += 1
-        elif self.__animation_list[4] == 3:
-            self.__animation_idx += 1
+        elif self.__animation_list[4] < 3:
+            self.__animation_idx = 4
             self.__animation_list[4] += 1
         else:
             self.__animation_idx = 0

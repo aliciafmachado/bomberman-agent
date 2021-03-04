@@ -36,3 +36,9 @@ class Bomb(GameObject):
         # Draw sprite
         display.blit(sprites_factory[sprite_name], (screen_pos[1] * BLOCK_SIZE,
                                                     screen_pos[0] * BLOCK_SIZE))
+
+    def explode(self):
+        self.__timer = self.__duration
+
+    def getTimer(self):
+        return self.__timer

@@ -59,10 +59,10 @@ class BombermanEnv(gym.Env):
             self.map = self.__create_map_from_scratch()
             self.original_map = np.copy(self.map)
 
-        self.game_objects = {'characters': [Character(self.initial_pos)],
-                             'bombs': [],
-                             'fires': [],
-                             'breaking_blocks': []}
+        self.game_objects = {'bombs': [],
+                            'fires': [],    
+                            'characters': [Character(self.initial_pos)],
+                            'breaking_blocks': []}
 
         self.renderer = Renderer(self.map, self.game_objects, display)
         self.__display = display
@@ -73,26 +73,40 @@ class BombermanEnv(gym.Env):
         :return: observation, reward, done and info
         """
         if action == PLACE_BOMB:
-            self.game_objects['bombs'].append(
-                Bomb(self.game_objects['characters'][0].get_pos()))
+            # check if there are not a bomb there
+            pos = self.game_objects['characters'][0].get_pos()
+            x, y = pos
+            if not self.map[x, y, 3]:
+                bomb = Bomb(pos)
+                self.game_objects['bombs'].append(bomb)
 
         # Update bombs
-        waiting = []
-        for i in range(len(self.game_objects['bombs'])):
-            if self.game_objects['bombs'][i].update(self.map):
-                waiting.append(i)
+        bomb_pos = {tuple(bomb.get_pos()): bomb for bomb in self.game_objects['bombs']}
+        set_all_bombs = set(self.game_objects['bombs'])
+        set_remaining_bombs = set()
+        while set_all_bombs:
+            bomb = set_all_bombs.pop()
+            if bomb.update(self.map):
+                set_remaining_bombs.add(bomb)
             else:
+                del bomb_pos[tuple(bomb.get_pos())]
                 # add fire
-                fire = Fire(self.game_objects['bombs'][i].get_pos(), self.fire_duration,
-                         self.bomb_range, self.map, self.game_objects['characters'][0])
+                fire = Fire(bomb.get_pos(), self.fire_duration, self.bomb_range, self.map, self.game_objects['characters'][0])
                 self.game_objects['fires'].append(fire)
                 #add breaking blocks
                 for break_block_pos in fire.break_blocks:
                     self.game_objects['breaking_blocks'].append(
                         BreakingBlock(break_block_pos, self.fire_duration)
                     )
+                #explode bombs in the way
+                for bomb_hit_pos in fire.bombs_hit:
+                    bomb_hit =  bomb_pos[tuple(bomb_hit_pos)]
+                    if bomb_hit in set_remaining_bombs:
+                        set_remaining_bombs.remove(bomb_hit)
+                    bomb_hit.explode()
+                    set_all_bombs.add(bomb_hit)
 
-        self.game_objects['bombs'] = [self.game_objects['bombs'][i] for i in waiting]
+        self.game_objects['bombs'] = list(set_remaining_bombs)
 
         # Update fires
         self.map[:, :, FIRE] = np.zeros(self.size)
