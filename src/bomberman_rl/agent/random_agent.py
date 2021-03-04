@@ -1,22 +1,23 @@
 import numpy as np
 from .agent import Agent
 
-from ..envs.conventions import UP, DOWN, LEFT, RIGHT, PLACE_BOMB
-
 
 class RandomAgent(Agent):
     """
     This agent takes always a random action
     """
 
-    available_actions = [UP, DOWN, LEFT, RIGHT, PLACE_BOMB]
-
-    def __init__(self, distribution=np.array([1 / len(available_actions)] * len(available_actions))):
+    def __init__(self, distribution=np.array([1 / len(Agent.AVAILABLE_ACTIONS)] * len(Agent.AVAILABLE_ACTIONS))):
         super().__init__()
-        assert len(distribution) == len(RandomAgent.available_actions)
+        """
+        The random agent should receive a probability distribution for its actions,
+        it'll assume an uniform distribution otherwise
+        """
+        assert len(distribution) == len(Agent.AVAILABLE_ACTIONS)
         self.__distribution = distribution
-        self.__q_table = {}
-        self.__mode = "train"
 
-    def choose_action(self):
-        return np.random.choice(RandomAgent.available_actions, p=self.__distribution)
+    def choose_action(self, *args):
+        """
+        Can take any parameters, ignore them all and take a random action
+        """
+        return np.random.choice(Agent.AVAILABLE_ACTIONS, p=self.__distribution)
