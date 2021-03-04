@@ -68,6 +68,7 @@ class DQNAgent():
         # so that we get the value that we would get from the state-action
         # in the batch
         state_action_values = self.qNet(state_batch).gather(1, action_batch)
+        print(self.qNet(state_batch)[0].detach())
 
         # We compute the values for all next states using the target net
         # and then we use the bellman
@@ -99,7 +100,7 @@ class DQNAgent():
         return loss.detach().numpy()        
     
     def select_action(self, state, current_episode, eps_decay=200., initial_eps=0.95, 
-        end_eps=0.2):
+        end_eps=0.0):
         '''
         We select actions by taking either random actions or by
             taking the actions considering the value returned by the qNet

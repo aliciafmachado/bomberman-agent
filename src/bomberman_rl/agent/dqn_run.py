@@ -7,6 +7,7 @@ import torchvision.transforms as transforms
 import gym
 import argparse
 import torch
+import os
 
 def main():
     # Parser
@@ -28,7 +29,6 @@ def main():
 
     args = parser.parse_args()
 
-    # TODO: implement --save_model, etc
     # Args
     if args.seed != None:
         random.seed(args.seed)
@@ -47,15 +47,15 @@ def main():
     memory = ReplayMemory(args.memory_size)
 
     # Create episodes and call training
-    # TODO: create a function in this script to do this
     print("Beginning training . . . ")
 
     for i_episode in range(args.nb_episodes):
         state = env.reset()
         done = False
         loss = -1
+        repetitions = 0
 
-        while not done:
+        while not done and repetitions < 50:
             # Select and perform an action
             action = dqn_agent.select_action(transform(state).unsqueeze(0).type(torch.FloatTensor).to(dqn_agent.device),
                 i_episode, eps_decay=args.nb_episodes)
@@ -74,22 +74,31 @@ def main():
                 batch = Simulation(*zip(*sample))
                 loss = dqn_agent.train(batch, args.batch_size)
 
+            repetitions += 1
+
             if args.verbose == True:
                 print('Episode[{}/{}], Loss: {:.4f}, Buffer state[{}/{}], Reward: {}'.format(i_episode+1, 
                     args.nb_episodes, loss, len(memory), args.memory_size, reward.item()))
 
         # Update or not the targetNet
-        if i_episode % args.target_update == 0: 
+        if (i_episode + 1) % args.target_update == 0: 
             dqn_agent.targetNet.load_state_dict(dqn_agent.qNet.state_dict())
 
 
     print("Ended training . . . ")
 
     if args.save_model != None:
-        print("Saving model . . .")
-        # TODO
-        print("Successfully saved . . .")
+        print("Saving q model . . .")
+        net_path = args.save_model + "qNet_at_epoch_" + str(args.nb_episodes) + ".pt"
+        if not os.path.exists(args.save_model):
+            os.makedirs(args.save_model)
+        torch.save({'nb_episodes': args.nb_episodes,
+                    'qNet': dqn_agent.qNet.state_dict(),
+                    'opt_qNet': dqn_agent.optimizer,
+                    'memory': memory,
+        }, net_path)
 
+        print("Successfully saved")
 
     # Evaluate agent
     print("Evaluating agent . . . ")
@@ -99,7 +108,6 @@ def main():
     env_eval.render()
     dqn_agent.qNet.eval()
     done = False
-    #dqn_agent.qNet.eval()
 
     # Select and perform an action
     while not done:
