@@ -7,6 +7,9 @@ class TrainableAgent(Agent, ABC):
     """
     Base class for an agent that takes actions on and environment
     """
+
+    AVAILABLE_MODES = ["eval", "train"]
+
     def __init__(self):
         super().__init__()
         pass
