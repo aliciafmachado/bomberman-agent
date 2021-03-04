@@ -24,11 +24,11 @@ class Case(unittest.TestCase):
                           '█████████████\n\n'
 
         env = gym.make("bomberman_rl:bomberman-default-v0")
-        r = Renderer(env.map, mode='print')
+        r = Renderer(env.map)
         trues = [(5, 5, 3), (7, 7, 4), (7, 8, 4), (7, 9, 4)]
         for t in trues:
             env.map[t] = True
-        r.render()
+        r.render(mode='stdout')
 
         # Capture print output
         captured = self.capsys.readouterr()
