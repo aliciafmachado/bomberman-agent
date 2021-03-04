@@ -30,7 +30,10 @@ class Bomb(GameObject):
 
         # Get correct animation sprite
         sprite_name = 'bomb'
-        sprite_name += str(self.__animation_idx % 3 + 1)  # Animation frame
+        frame = self.__animation_idx % 4 + 1
+        if frame == 4:
+            frame = 2
+        sprite_name += str(frame)  # Animation frame
         self.__animation_idx += 1
 
         # Draw sprite

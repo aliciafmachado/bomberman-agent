@@ -121,9 +121,12 @@ class Character(GameObject):
 
         # Put character in the correct position on screen (between two blocks)
         if not self.__stopped:
-            screen_pos -= self.__dir * (
-                (1 - (self.__animation_idx % frames_per_step) / frames_per_step))
-            sprite_name += str(self.__animation_idx % 2 + 1)  # Animation frame
+            screen_pos -= self.__dir * (frames_per_step - 1 - (
+                    self.__animation_idx % frames_per_step)) / frames_per_step
+            if self.__animation_idx % 4 == 0:
+                sprite_name += '1'
+            elif self.__animation_idx % 4 == 2:
+                sprite_name += '2'
             self.__animation_idx += 1
 
         # Draw sprite
