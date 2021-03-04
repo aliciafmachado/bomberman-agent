@@ -7,9 +7,10 @@ from collections import defaultdict
 from bomberman_rl.envs.game_objects.game_object import GameObject
 from bomberman_rl.envs.sprites_factory import SpritesFactory
 
-from bomberman_rl.envs.conventions import CENTER, LEFT, RIGHT, DOWN, UP, \
+from bomberman_rl.envs.conventions import LEFT, RIGHT, DOWN, UP, \
     FIXED_BLOCK, BLOCK, BOMB, FIRE, BLOCK_SIZE, CENTER, HORIZONTAL, VERTICAL, \
     END_LEFT, END_RIGHT, END_UP, END_DOWN
+
 
 class Fire(GameObject):
     """
@@ -42,8 +43,7 @@ class Fire(GameObject):
 
     def update(self):
         """
-        :param args:
-        :return:
+        :return: If fire is still on the game.
         """
         self.__timer -= 1
         self.__add__fire_to_map()
@@ -59,7 +59,6 @@ class Fire(GameObject):
             frames_per_step: Number of frames per step in the game, to control the
                 animation.
         """
-        screen_pos = self._pos.copy().astype(np.float)
         # load sprite based in position and frame
         if self.__animation_idx == 0:
             self.__animation_idx = 1
@@ -82,7 +81,6 @@ class Fire(GameObject):
                 self.__animation_idx += 1
         # draw fire according to position
         for key in self.__occupied_tiles.keys():
-            screen_pos = np.array(key).copy().astype(np.float)
             tp = self.__occupied_tiles[key]
             if tp == CENTER:
                 sprite_name = sprite_names
@@ -92,8 +90,8 @@ class Fire(GameObject):
                 sprite_name = sprite_names + "_vertical"
             else:
                 raise Exception("Implement type = {}".format(tp))
-            display.blit(sprites_factory[sprite_name], (screen_pos[1] * BLOCK_SIZE,
-                                            screen_pos[0] * BLOCK_SIZE))
+            display.blit(sprites_factory[sprite_name],
+                         (key[1] * BLOCK_SIZE, key[0] * BLOCK_SIZE))
 
     def __add__fire_to_map(self):
         """

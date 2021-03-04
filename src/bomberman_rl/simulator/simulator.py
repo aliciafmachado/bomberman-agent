@@ -1,5 +1,4 @@
 import gym
-import time
 
 from bomberman_rl.envs.conventions import UP, LEFT, RIGHT, DOWN, STOP, PLACE_BOMB
 
@@ -26,7 +25,7 @@ class Simulator:
         """
         self.__actions = actions
         self.__speed = speed
-        self.__env = gym.make(env_name, display='print')
+        self.__env = gym.make(env_name)
 
     def run(self):
         print('\033c')
@@ -36,8 +35,7 @@ class Simulator:
             _, reward, done, _ = self.__env.step(self.__actions[i])
             print("Reward", reward)
             print("Done", done)
-            self.__env.render()
-            time.sleep(1/self.__speed)
+            self.__env.render('stdout', self.__speed)
             print('\033c')
 
     def reset(self, actions):
