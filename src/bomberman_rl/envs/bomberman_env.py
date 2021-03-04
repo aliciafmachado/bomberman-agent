@@ -25,7 +25,7 @@ class BombermanEnv(gym.Env):
 
     metadata = {
         'render.modes': ['human', 'stdout'],
-        'available_board_sizes': [(11, 13), (5, 7)]
+        'available_board_sizes': [(11, 13), (5, 7), (5, 5)]
     }
 
     def __init__(self, size: Optional[Tuple[int, int]] = (11, 13),
@@ -46,6 +46,7 @@ class BombermanEnv(gym.Env):
         self.bomb_duration = 3
         self.fire_duration = 5
         self.bomb_range = 3
+        self.bomb_limit = 1
 
         np.random.seed(random_seed)
         # Map creation
@@ -60,7 +61,7 @@ class BombermanEnv(gym.Env):
             self.original_map = np.copy(self.map)
 
         self.game_objects = {'bombs': [],
-                            'fires': [],    
+                            'fires': [],
                             'characters': [Character(self.initial_pos)],
                             'breaking_blocks': []}
 
@@ -72,7 +73,7 @@ class BombermanEnv(gym.Env):
         :param action: next movement for the agent
         :return: observation, reward, done and info
         """
-        if action == PLACE_BOMB:
+        if action == PLACE_BOMB and len(self.game_objects['bombs']) < self.bomb_limit:
             # check if there are not a bomb there
             pos = self.game_objects['characters'][0].get_pos()
             x, y = pos
@@ -146,7 +147,7 @@ class BombermanEnv(gym.Env):
             self.map = np.copy(self.original_map)
 
         self.game_objects = {'bombs': [],
-                            'fires': [],    
+                            'fires': [],
                             'characters': [Character(self.initial_pos)],
                             'breaking_blocks': []}
 
