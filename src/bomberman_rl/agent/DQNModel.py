@@ -5,6 +5,7 @@
 import torch.nn as nn
 from bomberman_rl.utils.dqn_utils import conv2d_output
 import torch.nn.functional as F
+import torch
 
 # The input for our neural network will be the difference between the previous
 # state and the current one
@@ -17,17 +18,18 @@ class DQNModel(nn.Module):
         @param n_dim: Number of frames for each state
         @param n_actions: Number of possible actions
         '''
+        super().__init__()
         self.conv1 = nn.Conv2d(n_dim, 8, kernel_size=3, stride=1)
         self.bn1 = nn.BatchNorm2d(8)
         self.conv2 = nn.Conv2d(8, 16, kernel_size=3, stride=1)
         self.bn2 = nn.BatchNorm2d(16)
-        self.conv2 = nn.Conv2d(16, 16, kernel_size=3, stride=1)
+        self.conv3 = nn.Conv2d(16, 16, kernel_size=3, stride=1)
         self.bn3 = nn.BatchNorm2d(16)
 
         # We calculate the dimensions after the convolutional layers
-        linear_input_size = 16 * conv2d_output(conv2d_output(height)) * \
-            con2d_output(con2d_output(width))
-
+        linear_input_size = 16 * conv2d_output(conv2d_output(conv2d_output(height))) * \
+            conv2d_output(conv2d_output(conv2d_output(width)))
+        
         # The linear layer that will return the output
         self.linear = nn.Linear(linear_input_size, n_actions)
 

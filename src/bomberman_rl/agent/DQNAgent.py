@@ -3,8 +3,10 @@
 
 # Training pipeline
 import torch
+import random
+import numpy as np
 import torch.optim as optim
-from bomberman_rl.rl.DQNModel import DQNModel
+from bomberman_rl.agent.DQNModel import DQNModel
 
 class DQNAgent():
     '''
@@ -12,7 +14,7 @@ class DQNAgent():
     '''
 
     def __init__(self, height, width, n_dim=5, n_actions=6, 
-        target_update=10, lr=1e-3, self.gamma=0.9):
+        target_update=10, lr=1e-3, gamma=0.9):
         '''
         @param height: height of the environemnt frame
         @param width: width of the environment frame
@@ -26,9 +28,7 @@ class DQNAgent():
         self.qNet = DQNModel(height, width, n_dim=n_dim)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.n_actions = n_actions
-        
-        # Number of steps of training already done
-        self.current_episode = 0
+        self.gamma = gamma
 
         # The update frequence of the target net
         self.target_update = target_update
@@ -46,7 +46,6 @@ class DQNAgent():
         @param batch_size: size of the batch
         @return mean loss for the batch
         '''
-        self.current_episode += 1
 
         # Compute non-final states and concatenate the batch elements
         # we need to do it in order to pass to the target network
@@ -63,7 +62,7 @@ class DQNAgent():
         # First we calculate the Q(s_t, a) for the actions taken
         # so that we get the value that we would get from the state-action
         # in the batch
-        state_action_values = qNet(state_batch).gather(1, action_batch)
+        state_action_values = self.qNet(state_batch).gather(1, action_batch)
 
         # We compute the values for all next states using the target net
         # and then we use the bellman
@@ -73,7 +72,7 @@ class DQNAgent():
         # the final states get state value equal 0 and the other ones that are
         # not final get their correct values
         next_state_values = torch.zeros(batch_size, device=device)
-        next_state_values[non_final_mask] = target_net(non_final_next_states).max(1)[0].detach()
+        next_state_values[non_final_mask] = self.targetNet(non_final_next_states).max(1)[0].detach()
         
         # Compute the expected Q values
         expected_state_action_values = (next_state_values * self.gamma) + reward_batch
@@ -92,13 +91,9 @@ class DQNAgent():
 
         self.optimizer.step()
 
-        # Update or not the targetNet
-        if self.current_episode % self.target_update == 0: 
-            target_net.load_state_dict(qNet.state_dict())
-
         return loss.detach().numpy()        
     
-    def select_action(self, state, initial_eps=0.9, 
+    def select_action(self, state, current_episode, initial_eps=0.9, 
         end_eps=0.05, eps_decay=200.):
         '''
         We select actions by taking either random actions or by
@@ -113,8 +108,8 @@ class DQNAgent():
         
         # We get the current threshold to choose an action randomly
         # or to choose an action from the network
-        eps_threshold = initial_eps + (end_eps - initial_eps) * 
-            np.max(1., float(self.current_episode) / eps_decay))
+        eps_threshold = initial_eps + (end_eps - initial_eps) * \
+            max(1., float(current_episode) / eps_decay)
 
         if sample > eps_threshold:
             with torch.no_grad():

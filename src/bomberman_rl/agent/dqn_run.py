@@ -1,20 +1,83 @@
 # Run main for DQNAgent
 
-from bomberman_rl.rl.ReplayMemory import ReplayMemory
-from bomberman_rl.rl.ReplayMemory import Simulation
+from bomberman_rl.memory.ReplayMemory import ReplayMemory
+from bomberman_rl.memory.ReplayMemory import Simulation
+from bomberman_rl.agent.DQNAgent import DQNAgent
+import torchvision.transforms as transforms
+import gym
+import argparse
+import torch
 
-MEMORY_SIZE=10000
+def main():
+    # Parser
+    parser = argparse.ArgumentParser()
 
-# TODO
-# Return if the there are not experiences enough to train
-# the agent
-# if(len(self.memory)) < batch_size:
-#     return
+    # Mandatory arguments
+    parser.add_argument("nb_episodes", type=int)
 
-# sample = self.memory.sample(batch_size)
+    # Optional arguments
+    parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--lr", type=int, default=1e-3)
+    parser.add_argument("--save_model", type=bool, default=False)
+    parser.add_argument("--save_frequency", type=int, default=None)
+    parser.add_argument("--retrain", type=str, default=None)
+    parser.add_argument("--evaluate", type=bool, default=False)
+    parser.add_argument("--verbose", type=bool, default=False)
+    parser.add_argument("--memory_size", type=int, default=10000)
 
-#         # We transpose the simulations in order to get 
-# # the actions and rewards in the standart way
-# batch = Simulation(*zip(*sample))
+    args = parser.parse_args()
 
-# self.memory = ReplayMemory(MEMORY_SIZE)
+    # TODO: implement --save_model, --save_frequency, --seed, --retrain, --lr, etc
+    transform = transforms.ToTensor()
+
+    # Create environment
+    env = gym.make("bomberman_rl:bomberman-default-v0", display='print')
+
+    # Create agent
+    dqn_agent = DQNAgent(11, 13, 5)
+
+    # Creating the memory
+    memory = ReplayMemory(args.memory_size)
+
+    # Create episodes and call training
+    # TODO: create a function in this script to do this
+    print("Beginning training . . . ")
+
+    for i_episode in range(args.nb_episodes):
+        state = env.reset()
+        done = False
+
+        while not done:
+            # Select and perform an action
+            action = dqn_agent.select_action(transform(state).unsqueeze(0).type(torch.FloatTensor).to(dqn_agent.device),
+                i_episode)
+
+            print("action: ", action.item())
+            new_state, reward, done, _ = env.step(action.item())
+            reward = torch.tensor([reward], device=dqn_agent.device)
+
+            # Store the transition in memory
+            memory.push(state, action, next_state, reward)
+
+            # Next state
+            state = next_state
+
+            if(len(memory) >= args.memory_size):
+                sample = self.memory.sample(args.batch_size)
+                batch = Simulation(*zip(*sample))
+                dqn_agent.train(batch, args.batch_size)
+
+        # Update or not the targetNet
+        if i_episode % self.target_update == 0: 
+            target_net.load_state_dict(qNet.state_dict())
+
+
+    print("Ended training . . . ")
+
+    # Evaluate agent
+    print("Evaluating agent . . . ")
+
+    print("Finished!")
+
+if __name__ == '__main__':
+        main()
