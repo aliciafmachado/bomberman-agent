@@ -39,8 +39,8 @@ class Character(GameObject):
 
         # Rewards
         self.__alive_reward = 0
-        self.__block_break_reward = 1
-        self.__dead_reward = -2
+        self.__block_break_reward = 100
+        self.__dead_reward = -10
 
     def update(self, action: int, world: NDArray[bool]) -> Tuple[bool, int]:
         """
@@ -124,6 +124,7 @@ class Character(GameObject):
 
     def __get_reward(self):
         if self.__dead:
+            self.__block_break_cumulative_reward = 0
             return self.__dead_reward
         else:
             block_reward = self.__block_break_cumulative_reward

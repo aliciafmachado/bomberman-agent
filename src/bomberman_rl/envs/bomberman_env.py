@@ -24,7 +24,7 @@ class BombermanEnv(gym.Env):
 
     metadata = {
         'render.modes': ['human', 'stdout'],
-        'available_board_sizes': [(11, 13), (5, 7)]
+        'available_board_sizes': [(11, 13), (5, 7), (5, 5)]
     }
 
     def __init__(self, size: Optional[Tuple[int, int]] = (11, 13),
@@ -43,6 +43,7 @@ class BombermanEnv(gym.Env):
         self.initial_pos = np.array([1, 1], dtype=np.int8)
         self.bomb_duration = 3
         self.bomb_range = 3
+        self.bomb_limit = 1
 
         np.random.seed(random_seed)
         # Map creation
@@ -68,7 +69,7 @@ class BombermanEnv(gym.Env):
         :param action: next movement for the agent
         :return: observation, reward, done and info
         """
-        if action == PLACE_BOMB:
+        if action == PLACE_BOMB and len(self.game_objects['bombs']) < self.bomb_limit:
             self.game_objects['bombs'].append(
                 Bomb(self.game_objects['characters'][0].get_pos()))
 
@@ -120,7 +121,7 @@ class BombermanEnv(gym.Env):
 
         self.renderer = Renderer(self.map, self.game_objects, self.__display)
 
-        return np.copy(self.map)
+        return np.copy(self.map), False, 0, {}
 
     def render(self, mode='human'):
         self.renderer.render()
