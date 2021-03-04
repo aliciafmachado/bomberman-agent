@@ -145,9 +145,10 @@ class BombermanEnv(gym.Env):
         else:
             self.map = np.copy(self.original_map)
 
-        self.game_objects = {'characters': [Character(self.initial_pos)],
-                             'bombs': [],
-                             'fires': []}
+        self.game_objects = {'bombs': [],
+                            'fires': [],    
+                            'characters': [Character(self.initial_pos)],
+                            'breaking_blocks': []}
 
         self.renderer = Renderer(self.map, self.game_objects, self.__display)
 
