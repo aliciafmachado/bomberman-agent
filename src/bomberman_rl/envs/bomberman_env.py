@@ -29,7 +29,6 @@ class BombermanEnv(gym.Env):
     }
 
     def __init__(self, size: Optional[Tuple[int, int]] = (11, 13),
-                 display: str = None,
                  custom_map: Optional[str] = None,
                  random_seed: int = 42):
         """
@@ -65,8 +64,7 @@ class BombermanEnv(gym.Env):
                             'characters': [Character(self.initial_pos)],
                             'breaking_blocks': []}
 
-        self.renderer = Renderer(self.map, self.game_objects, display)
-        self.__display = display
+        self.renderer = Renderer(self.map, self.game_objects)
 
     def step(self, action: int):
         """
@@ -151,12 +149,21 @@ class BombermanEnv(gym.Env):
                             'characters': [Character(self.initial_pos)],
                             'breaking_blocks': []}
 
-        self.renderer = Renderer(self.map, self.game_objects, self.__display)
+        self.renderer.reset(self.map, self.game_objects)
 
         return np.copy(self.map)
 
-    def render(self, mode='human'):
-        self.renderer.render()
+    def render(self, mode='human', steps_per_sec=2):
+        """
+        Renders or prints the step.
+        Args:
+            mode: 'human' or 'stdout' for pygame rendering or print.
+            steps_per_sec: This controls the speed of the rendering if it is 'human'.
+        """
+        if mode not in BombermanEnv.metadata['render.modes']:
+            raise ValueError('Invalid render mode')
+
+        self.renderer.render(mode, steps_per_sec)
 
     def close(self):
         raise NotImplementedError

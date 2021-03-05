@@ -7,6 +7,7 @@ import random
 import numpy as np
 import torch.optim as optim
 from bomberman_rl.agent.DQNModel import DQNModel
+import torchvision.transforms as transforms
 
 class DQNAgent():
     '''
@@ -38,7 +39,7 @@ class DQNAgent():
         self.optimizer = optim.Adam(self.qNet.parameters(), lr)
 
         # TODO: implement how to get to clip or not the weights
-        self.clip_value = False
+        self.clip_val = True
 
     def train(self, batch, batch_size):
         '''
@@ -47,22 +48,27 @@ class DQNAgent():
         @return mean loss for the batch
         '''
 
+        transform = transforms.ToTensor()
+
         # Compute non-final states and concatenate the batch elements
         # we need to do it in order to pass to the target network
         non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
-                                          batch.next_state)), device=device, dtype=torch.bool)
-        non_final_next_states = torch.cat([s for s in batch.next_state
-                                                    if s is not None])
+                                          batch.next_state)), device=self.device, dtype=torch.bool)
+
+        non_final_next_states = torch.cat([transform(np.array(s)).to(self.device).unsqueeze(0) for s in batch.next_state
+                                                    if s is not None], 0).type(torch.FloatTensor)
 
         # Here we extract the states, actions and rewards from the batch
-        state_batch = torch.cat(batch.state)
-        action_batch = torch.cat(batch.action)
-        reward_batch = torch.cat(batch.reward)
+        state_batch = torch.cat([transform(np.array(s)).to(self.device).unsqueeze(0) for s in 
+            batch.state], 0).type(torch.FloatTensor)
+        action_batch = torch.tensor(batch.action, device=self.device).unsqueeze(0)
+        reward_batch = torch.tensor(batch.reward, device=self.device).unsqueeze(0)
 
         # First we calculate the Q(s_t, a) for the actions taken
         # so that we get the value that we would get from the state-action
         # in the batch
         state_action_values = self.qNet(state_batch).gather(1, action_batch)
+        print(self.qNet(state_batch)[0].detach())
 
         # We compute the values for all next states using the target net
         # and then we use the bellman
@@ -71,7 +77,7 @@ class DQNAgent():
         # We initialize the values and use the previous mask so that
         # the final states get state value equal 0 and the other ones that are
         # not final get their correct values
-        next_state_values = torch.zeros(batch_size, device=device)
+        next_state_values = torch.zeros(batch_size, device=self.device)
         next_state_values[non_final_mask] = self.targetNet(non_final_next_states).max(1)[0].detach()
         
         # Compute the expected Q values
@@ -81,10 +87,10 @@ class DQNAgent():
         loss = self.loss_fn(state_action_values, expected_state_action_values)
 
         # Optimize the model
-        sellf.optimizer.zero_grad()
+        self.optimizer.zero_grad()
         loss.backward()
 
-        if self.clip_value:
+        if self.clip_val:
             # Put all grads between -1 and 1
             torch.nn.utils.clip_grad_norm_(self.qNet.parameters(),
                 self.clip_val)
@@ -93,8 +99,8 @@ class DQNAgent():
 
         return loss.detach().numpy()        
     
-    def select_action(self, state, current_episode, initial_eps=0.9, 
-        end_eps=0.05, eps_decay=200.):
+    def select_action(self, state, current_episode, eps_decay=200., initial_eps=0.95, 
+        end_eps=0.0):
         '''
         We select actions by taking either random actions or by
             taking the actions considering the value returned by the qNet
@@ -109,7 +115,7 @@ class DQNAgent():
         # We get the current threshold to choose an action randomly
         # or to choose an action from the network
         eps_threshold = initial_eps + (end_eps - initial_eps) * \
-            max(1., float(current_episode) / eps_decay)
+            min(1., float(current_episode) / eps_decay)
 
         if sample > eps_threshold:
             with torch.no_grad():
@@ -121,3 +127,9 @@ class DQNAgent():
             # We take a random action
             return torch.tensor([[random.randrange(self.n_actions)]], 
                 device=self.device, dtype=torch.long)
+
+    def evaluate():
+        self.qNet.eval()
+
+
+        pass

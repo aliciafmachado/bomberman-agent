@@ -22,7 +22,7 @@ class BaseSimulator:
         :param env_name: The environment to be used
         """
 
-        self._env = gym.make(env_name, display=display_mode)
+        self._env = gym.make(env_name)
         self._display = display_mode
 
     def run(self):

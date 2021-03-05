@@ -12,6 +12,6 @@ args = parser.parse_args()
 
 # Loading agent and running simulation
 agent = TrainableAgent.load(args.agent_path, args.agent_name)
-simulator = SingleAgentSimulator(args.environment, agent, "draw")
+simulator = SingleAgentSimulator(args.environment, agent, "human")
 
 simulator.run()
