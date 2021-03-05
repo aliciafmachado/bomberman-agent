@@ -121,7 +121,7 @@ class BombermanEnv(gym.Env):
 
         self.renderer = Renderer(self.map, self.game_objects, self.__display)
 
-        return np.copy(self.map), False, 0, {}
+        return np.copy(self.map)
 
     def render(self, mode='human'):
         self.renderer.render()
