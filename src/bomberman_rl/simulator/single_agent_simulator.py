@@ -12,7 +12,7 @@ class SingleAgentSimulator(BaseSimulator):
     def __init__(self, env_name, agent,
                  display="print",
                  nb_runs=1,
-                 max_steps=int(1e4),
+                 max_steps=int(1e3),
                  fps=1):
         """
         :param env_name: The name of the environment to be used
@@ -58,7 +58,6 @@ class SingleAgentSimulator(BaseSimulator):
         for i in range(self.__max_steps):
             # Check if it's already over
             if not np.any(observation[:, :, BLOCK]) or self.__done:
-                self.__agent.render()
                 return
 
             # Perform last action
@@ -70,7 +69,7 @@ class SingleAgentSimulator(BaseSimulator):
             # Render
             self.__render(display, (i, reward))
 
-        self.__render()
+        self.__render(display, "End")
 
     def __render(self, display, info):
         if display is not "none":

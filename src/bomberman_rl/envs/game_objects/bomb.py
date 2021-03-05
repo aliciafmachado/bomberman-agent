@@ -30,12 +30,18 @@ class Bomb(GameObject):
 
         # Get correct animation sprite
         sprite_name = 'bomb'
-        sprite_name += str(self.__animation_idx % 3 + 1)  # Animation frame
+        frame = self.__animation_idx % 4 + 1
+        if frame == 4:
+            frame = 2
+        sprite_name += str(frame)  # Animation frame
         self.__animation_idx += 1
 
         # Draw sprite
         display.blit(sprites_factory[sprite_name], (screen_pos[1] * BLOCK_SIZE,
                                                     screen_pos[0] * BLOCK_SIZE))
 
-    def get_timer(self):
+    def explode(self):
+        self.__timer = self.__duration
+
+    def getTimer(self):
         return self.__timer

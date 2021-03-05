@@ -36,6 +36,7 @@ class Character(GameObject):
         self.__animation_idx = 0
         self.__dead = False
         self.__block_break_cumulative_reward = 0
+        self.__animation_idx_death = 0
 
         # Rewards
         self.__alive_reward = 0
@@ -96,7 +97,17 @@ class Character(GameObject):
         """
         screen_pos = self._pos.copy().astype(np.float)
         screen_pos[0] -= 0.25  # Character sprite is 25% taller than blocks
-
+        
+        # in case of death
+        if self.__dead:
+            if not self.__stopped:
+                screen_pos -= self.__dir * (
+                (1 - (self.__animation_idx % frames_per_step + 1) / frames_per_step))
+            sprite_name = 'bomberman_die' + str(self.__animation_idx_death % 3 + 1)
+            self.__animation_idx_death += 1
+            display.blit(sprites_factory[sprite_name], (screen_pos[1] * BLOCK_SIZE,
+                                                        screen_pos[0] * BLOCK_SIZE))
+            return
         # Get correct animation frame
         sprite_name = 'bomberman_'
         if self.__dir[0] == -1:
@@ -110,9 +121,12 @@ class Character(GameObject):
 
         # Put character in the correct position on screen (between two blocks)
         if not self.__stopped:
-            screen_pos -= self.__dir * (
-                (1 - (self.__animation_idx % frames_per_step) / frames_per_step))
-            sprite_name += str(self.__animation_idx % 2 + 1)  # Animation frame
+            screen_pos -= self.__dir * (frames_per_step - 1 - (
+                    self.__animation_idx % frames_per_step)) / frames_per_step
+            if self.__animation_idx % 4 == 0:
+                sprite_name += '1'
+            elif self.__animation_idx % 4 == 2:
+                sprite_name += '2'
             self.__animation_idx += 1
 
         # Draw sprite

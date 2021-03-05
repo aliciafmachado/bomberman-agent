@@ -19,9 +19,9 @@ class QAgentSingleCoach(BaseSimulator):
                  lr=0.2,
                  gamma=0.95,
                  exploration_factor=0.3,
-                 max_steps=int(1e4),
-                 show_each=5000,
-                 nb_passes= 10000,
+                 max_steps=int(1e3),
+                 show_each=1000,
+                 nb_passes=10000,
                  fps=10):
         """
         :param env_name: The name of the environment to be used
