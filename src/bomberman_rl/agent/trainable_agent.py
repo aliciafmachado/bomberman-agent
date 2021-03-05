@@ -1,3 +1,4 @@
+import pickle
 from abc import ABC
 
 from .agent import Agent
@@ -20,18 +21,23 @@ class TrainableAgent(Agent, ABC):
         """
         raise NotImplementedError
 
-    def load(self, path: str):
+    @classmethod
+    def load(cls, path, name):
         """
-        Loads the agent trainable parameters from file
+        Loads the an agent from a file
         :param path: path to file
+        :param name: agent's name
         """
-        raise NotImplementedError
+        with open(path+name+".pickle", 'rb') as handle:
+            return pickle.load(handle)
 
-    def save(self, path, name: str):
+    def save(self, path, name):
         """
-        Saves the agent's trainable parameters to file
+        Saves the current agent to file
         :param name: name of the save
         :param path: path to save file
         :return:
         """
-        raise NotImplementedError
+        path = path + name + ".pickle"
+        with open(path, 'wb') as handle:
+            pickle.dump(self, handle, protocol=pickle.HIGHEST_PROTOCOL)
