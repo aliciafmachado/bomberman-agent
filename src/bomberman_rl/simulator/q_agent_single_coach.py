@@ -103,6 +103,4 @@ class QAgentSingleCoach(BaseSimulator):
         if display is not "none":
             print('\033c')
             print(info)
-            self._env.render()
-            time.sleep(1/self.__fps)
-
+            self._env.render(mode=display, steps_per_sec=self.__fps)

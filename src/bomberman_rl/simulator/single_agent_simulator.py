@@ -10,7 +10,7 @@ class SingleAgentSimulator(BaseSimulator):
     Plays a single agent on the screen
     """
     def __init__(self, env_name, agent,
-                 display="print",
+                 display="stdout",
                  nb_runs=1,
                  max_steps=int(1e3),
                  fps=1):
@@ -73,8 +73,5 @@ class SingleAgentSimulator(BaseSimulator):
 
     def __render(self, display, info):
         if display is not "none":
-            print('\033c')
             print(info)
-            self._env.render()
-            time.sleep(1/self.__fps)
-
+            self._env.render(mode=display, steps_per_sec=self.__fps)

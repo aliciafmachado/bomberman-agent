@@ -20,7 +20,7 @@ else:
     agent = QAgent()
 
 # Running train
-coach = QAgentSingleCoach(args.environment, agent, "print")
+coach = QAgentSingleCoach(args.environment, agent, "stdout")
 coach.run()
 
 # Saving result
