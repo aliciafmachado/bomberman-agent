@@ -8,7 +8,7 @@ parser.add_argument("--agent-name", help="agent file name after train", required
 parser.add_argument('--agent-path', help="path to agent file after train", default="./")
 parser.add_argument("--agent-pretrained-name", help="name of pretrained agent to continue training", default=None)
 parser.add_argument('--agent-pretrained-path', help="path of pretrained agent to continue training", default="./")
-parser.add_argument('--environment', help="name of teh environment to be used",
+parser.add_argument('--environment', help="name of the environment to be used",
                     default="bomberman_rl:bomberman-small-v0")
 args = parser.parse_args()
 
