@@ -1,10 +1,9 @@
 import gym
 import numpy as np
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple
 from nptyping import NDArray
 
 from .conventions import FIXED_BLOCK, BLOCK, CHARACTER, PLACE_BOMB, FIRE
-from .game_objects.game_object import GameObject
 from .game_objects.bomb import Bomb
 from .game_objects.fire import Fire
 from .game_objects.character import Character
