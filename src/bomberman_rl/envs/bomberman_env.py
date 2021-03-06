@@ -1,9 +1,10 @@
 import gym
 import numpy as np
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 from nptyping import NDArray
 
 from .conventions import FIXED_BLOCK, BLOCK, CHARACTER, PLACE_BOMB, FIRE
+from .game_objects.game_object import GameObject
 from .game_objects.bomb import Bomb
 from .game_objects.fire import Fire
 from .game_objects.character import Character
@@ -35,16 +36,14 @@ class BombermanEnv(gym.Env):
         Environment constructor
         Args:
             size: optional map size, it will be ignored if a custom_map is given
-            display: display the board
             custom_map: if given a path, it will load a custom map from a txt
             random_seed: numpy random seed for reproducibility
-            death_animation: shows death animation in the end
         """
         self.custom_map = custom_map
         self.initial_pos = np.array([1, 1], dtype=np.int8)
-        self.bomb_duration = 3
-        self.fire_duration = 5
-        self.bomb_range = 3
+        self.bomb_duration = 6
+        self.fire_duration = 4
+        self.fire_range = 3
         self.bomb_limit = 1
 
         np.random.seed(random_seed)
@@ -59,10 +58,13 @@ class BombermanEnv(gym.Env):
             self.map = self.__create_map_from_scratch()
             self.original_map = np.copy(self.map)
 
-        self.game_objects = {'bombs': [],
-                            'fires': [],
-                            'characters': [Character(self.initial_pos)],
-                            'breaking_blocks': []}
+        self.game_objects = {
+            'bombs': [],
+            'fires': [],
+            'characters': [],
+            'breaking_blocks': []
+        }
+        self.game_objects['characters'].append(Character(self.initial_pos))
 
         self.renderer = Renderer(self.map, self.game_objects)
 
@@ -72,11 +74,11 @@ class BombermanEnv(gym.Env):
         :return: observation, reward, done and info
         """
         if action == PLACE_BOMB and len(self.game_objects['bombs']) < self.bomb_limit:
-            # check if there are not a bomb there
+            # Check if there is not a bomb there
             pos = self.game_objects['characters'][0].get_pos()
             x, y = pos
             if not self.map[x, y, 3]:
-                bomb = Bomb(pos)
+                bomb = Bomb(pos, self.bomb_duration)
                 self.game_objects['bombs'].append(bomb)
 
         # Update bombs
@@ -89,17 +91,21 @@ class BombermanEnv(gym.Env):
                 set_remaining_bombs.add(bomb)
             else:
                 del bomb_pos[tuple(bomb.get_pos())]
-                # add fire
-                fire = Fire(bomb.get_pos(), self.fire_duration, self.bomb_range, self.map, self.game_objects['characters'][0])
+
+                # Add fire
+                fire = Fire(bomb.get_pos(), self.fire_duration, self.fire_range, self.map,
+                            self.game_objects['characters'][0])
                 self.game_objects['fires'].append(fire)
-                #add breaking blocks
+
+                # Add breaking blocks
                 for break_block_pos in fire.break_blocks:
                     self.game_objects['breaking_blocks'].append(
                         BreakingBlock(break_block_pos, self.fire_duration)
                     )
-                #explode bombs in the way
+
+                # Explode bombs in the way
                 for bomb_hit_pos in fire.bombs_hit:
-                    bomb_hit =  bomb_pos[tuple(bomb_hit_pos)]
+                    bomb_hit = bomb_pos[tuple(bomb_hit_pos)]
                     if bomb_hit in set_remaining_bombs:
                         set_remaining_bombs.remove(bomb_hit)
                     bomb_hit.explode()
@@ -113,14 +119,16 @@ class BombermanEnv(gym.Env):
         for i in range(len(self.game_objects['fires'])):
             if self.game_objects['fires'][i].update():
                 fires_indexes_to_keep.append(i)
-        self.game_objects['fires'] = [self.game_objects['fires'][i] for i in fires_indexes_to_keep]
+        self.game_objects['fires'] = [
+            self.game_objects['fires'][i] for i in fires_indexes_to_keep]
 
-        # update breaking block
+        # Update breaking block
         breaking_blocks_idx_to_keep = []
         for i in range(len(self.game_objects['breaking_blocks'])):
             if self.game_objects['breaking_blocks'][i].update(self.map):
                 breaking_blocks_idx_to_keep.append(i)
-        self.game_objects['breaking_blocks'] = [self.game_objects['breaking_blocks'][i] for i in breaking_blocks_idx_to_keep]
+        self.game_objects['breaking_blocks'] = [
+            self.game_objects['breaking_blocks'][i] for i in breaking_blocks_idx_to_keep]
 
         # Update character
         died, reward = self.game_objects['characters'][0].update(action, self.map)
@@ -144,10 +152,13 @@ class BombermanEnv(gym.Env):
         else:
             self.map = np.copy(self.original_map)
 
-        self.game_objects = {'bombs': [],
-                            'fires': [],
-                            'characters': [Character(self.initial_pos)],
-                            'breaking_blocks': []}
+        self.game_objects = {
+            'bombs': [],
+            'fires': [],
+            'characters': [],
+            'breaking_blocks': []
+        }
+        self.game_objects['characters'].append(Character(self.initial_pos))
 
         self.renderer.reset(self.map, self.game_objects)
 
