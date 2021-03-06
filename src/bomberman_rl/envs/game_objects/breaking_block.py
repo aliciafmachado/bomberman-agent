@@ -16,7 +16,7 @@ class BreakingBlock(GameObject):
         self.__duration = duration
         self.__animation_idx = 0
         self.__animation_list = [6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1]
-        self.__timer = 0
+        self.__timer = -1
 
     def update(self, world: NDArray[bool]) -> bool:
         """
