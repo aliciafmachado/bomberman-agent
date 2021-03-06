@@ -1,15 +1,12 @@
 from nptyping import NDArray
 import numpy as np
 import pygame
-import gym
-from collections import defaultdict
 
 from bomberman_rl.envs.game_objects.game_object import GameObject
 from bomberman_rl.envs.sprites_factory import SpritesFactory
 
 from bomberman_rl.envs.conventions import LEFT, RIGHT, DOWN, UP, \
-    FIXED_BLOCK, BLOCK, BOMB, FIRE, BLOCK_SIZE, CENTER, HORIZONTAL, VERTICAL, \
-    END_LEFT, END_RIGHT, END_UP, END_DOWN
+    FIXED_BLOCK, BLOCK, BOMB, FIRE, BLOCK_SIZE, CENTER, HORIZONTAL, VERTICAL
 
 
 class Fire(GameObject):
@@ -30,12 +27,14 @@ class Fire(GameObject):
         :param owner:
         """
         super().__init__(pos)
-        self.__timer = duration
+        self.__timer = -1
+        self.__duration = duration
         self.__tiles = tiles
         self.__world = world
         self.__owner = owner
         self.__reward_given = False
-        self.__occupied_tiles, self.break_blocks, self.bombs_hit = self.__get_fire_coordinates()
+        self.__occupied_tiles, self.break_blocks, self.bombs_hit = \
+            self.__get_fire_coordinates()
         # animation assistance
         self.__animation_idx = 1
         self.__animation_end = False
@@ -45,9 +44,11 @@ class Fire(GameObject):
         """
         :return: If fire is still on the game.
         """
-        self.__timer -= 1
-        self.__add__fire_to_map()
-        return self.__timer > 0
+        self.__timer += 1
+        waiting = self.__timer < self.__duration
+        if waiting:
+            self.__add_fire_to_map()
+        return waiting
     
     def render(self, display: pygame.display, sprites_factory: SpritesFactory,
                frames_per_step: int):
@@ -93,7 +94,7 @@ class Fire(GameObject):
             display.blit(sprites_factory[sprite_name],
                          (key[1] * BLOCK_SIZE, key[0] * BLOCK_SIZE))
 
-    def __add__fire_to_map(self):
+    def __add_fire_to_map(self):
         """
         Adds this fire to the map
         """
