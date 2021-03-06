@@ -1,6 +1,6 @@
 import gym
 import numpy as np
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict
 from nptyping import NDArray
 
 from .conventions import FIXED_BLOCK, BLOCK, CHARACTER, PLACE_BOMB, FIRE
@@ -67,7 +67,7 @@ class BombermanEnv(gym.Env):
 
         self.renderer = Renderer(self.map, self.game_objects)
 
-    def step(self, action: int):
+    def step(self, action: int) -> Tuple[NDArray, float, bool, Dict]:
         """
         :param action: next movement for the agent
         :return: observation, reward, done and info
@@ -138,7 +138,7 @@ class BombermanEnv(gym.Env):
 
         return observation, reward, done, {}
 
-    def reset(self, new_map=False) -> NDArray[bool]:
+    def reset(self, new_map: bool = False) -> NDArray[bool]:
         """
         :param new_map: if True generate new positions for the breakable blocks
         :return: map a numpy array which contains the description of the current state
@@ -163,17 +163,19 @@ class BombermanEnv(gym.Env):
 
         return np.copy(self.map)
 
-    def render(self, mode='human', steps_per_sec=2):
+    def render(self, mode: str = 'human', steps_per_sec: int = 2,
+               debug_text: Optional[str] = None):
         """
         Renders or prints the step.
         Args:
             mode: 'human' or 'stdout' for pygame rendering or print.
             steps_per_sec: This controls the speed of the rendering if it is 'human'.
+            debug_text: Additional text to be displayed.
         """
         if mode not in BombermanEnv.metadata['render.modes']:
             raise ValueError('Invalid render mode')
 
-        self.renderer.render(mode, steps_per_sec)
+        self.renderer.render(mode, steps_per_sec, debug_text)
 
     def close(self):
         raise NotImplementedError

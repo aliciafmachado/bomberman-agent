@@ -1,5 +1,5 @@
 from nptyping import NDArray
-from typing import Dict
+from typing import Dict, Optional
 import os
 
 from .conventions import FIXED_BLOCK, BLOCK, CHARACTER, BOMB, FIRE, BLOCK_SIZE
@@ -22,13 +22,12 @@ class Renderer:
                 CHARACTER: '\u263A', BOMB: '\u2299', FIRE: '*'}
     print_order = [CHARACTER, BOMB, FIRE, BLOCK, FIXED_BLOCK]
 
-    def __init__(self, world: NDArray[bool], game_objects: Dict = None):
+    def __init__(self, world: NDArray[bool], game_objects: Optional[Dict] = None):
         """
         Default constructor.
         Args:
             world: Game's matrix.
             game_objects: List of game objects in the world.
-            mode: 'draw', 'print' or None, controls how the game will be rendered.
         """
 
         self.__world = world
@@ -37,16 +36,19 @@ class Renderer:
         self.__mode = None
 
         pygame.init()
+        pygame.font.init()
         self.__clock = pygame.time.Clock()
+        self.__font = pygame.font.SysFont('arial', 10)
         self.__width = None
         self.__height = None
         self.__display = None
 
-    def render(self, mode: str, steps_per_sec: int):
+    def render(self, mode: str, steps_per_sec: int, debug_text: Optional[str]):
         """
         Draws or prints one game step.
         @param mode: 'human' or 'stdout'
         @param steps_per_sec: Controls the speed of the game.
+        @param debug_text: Additional text to be displayed.
         """
         if self.__first_time:
             self.__first_time = False
@@ -63,24 +65,26 @@ class Renderer:
                     Renderer.sprites_factory = SpritesFactory()
 
         if self.__mode == 'human':
-            self.__render_draw(steps_per_sec)
+            self.__render_human(steps_per_sec, debug_text)
         elif self.__mode == 'stdout':
-            self.__render_print(steps_per_sec)
+            self.__render_stdout(steps_per_sec, debug_text)
 
-    def reset(self, world: NDArray[bool], game_objects: Dict = None):
+    def reset(self, world: NDArray[bool], game_objects: Optional[Dict] = None):
         """
         Resets the window
         Args:
             world:
             game_objects:
         """
+        del self.__font  # Fixes segfault https://github.com/renpy/pygame_sdl2/issues/112
         pygame.quit()
         self.__init__(world, game_objects)
 
-    def __render_draw(self, steps_per_sec: int):
+    def __render_human(self, steps_per_sec: int, debug_text: Optional[str]):
         """
         Draws the game 'frame_per_step' times, to make animations work.
         @param steps_per_sec: Controls the speed of the game.
+        @param debug_text: Additional text to be displayed.
         """
         for i in range(Renderer.frames_per_step):
             self.__display.fill(Renderer.grass_color)
@@ -103,14 +107,20 @@ class Renderer:
                     obj.render(self.__display, Renderer.sprites_factory,
                                Renderer.frames_per_step)
 
+            # Display text
+            if debug_text is not None:
+                text_surface = self.__font.render(debug_text, False, (255, 255, 255))
+                self.__display.blit(text_surface, (1, 1))
+
             pygame.display.flip()
             self.__clock.tick(Renderer.frames_per_step * steps_per_sec)
 
-    def __render_print(self, steps_per_sec: int):
+    def __render_stdout(self, steps_per_sec: int, debug_text: Optional[str]):
         """
         Prints the 2D array of the game, giving priority to character, bomb, fire and
         blocks, in this order.
         @param steps_per_sec: Controls the speed of the game.
+        @param debug_text: Additional text to be printed.
         """
         for i in range(self.__world.shape[0]):
             for j in range(self.__world.shape[1]):
@@ -123,5 +133,9 @@ class Renderer:
                 if not printed:
                     print(end=' ')
             print()
+
+        if debug_text is not None:
+            print(debug_text)
+
         print()
         self.__clock.tick(steps_per_sec)
