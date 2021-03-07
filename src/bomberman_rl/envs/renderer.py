@@ -1,4 +1,5 @@
 from nptyping import NDArray
+import numpy as np
 from typing import Dict, Optional
 import os
 
@@ -22,15 +23,18 @@ class Renderer:
                 CHARACTER: '\u263A', BOMB: '\u2299', FIRE: '*'}
     print_order = [CHARACTER, BOMB, FIRE, BLOCK, FIXED_BLOCK]
 
-    def __init__(self, world: NDArray[bool], game_objects: Optional[Dict] = None):
+    def __init__(self, world: NDArray[bool], character_layers: NDArray[bool],
+                 game_objects: Optional[Dict] = None):
         """
         Default constructor.
         Args:
             world: Game's matrix.
+            character_layers: Game's characters matrix.
             game_objects: List of game objects in the world.
         """
 
         self.__world = world
+        self.__character_layers = character_layers
         self.__game_objects = game_objects
         self.__first_time = True
         self.__mode = None
@@ -69,16 +73,18 @@ class Renderer:
         elif self.__mode == 'stdout':
             self.__render_stdout(steps_per_sec, debug_text)
 
-    def reset(self, world: NDArray[bool], game_objects: Optional[Dict] = None):
+    def reset(self, world: NDArray[bool], character_layers: NDArray[bool],
+              game_objects: Optional[Dict] = None):
         """
         Resets the window
         Args:
-            world:
-            game_objects:
+            world: Game's matrix.
+            character_layers: Game's characters matrix.
+            game_objects: List of game objects in the world.
         """
         del self.__font  # Fixes segfault https://github.com/renpy/pygame_sdl2/issues/112
         pygame.quit()
-        self.__init__(world, game_objects)
+        self.__init__(world, character_layers, game_objects)
 
     def __render_human(self, steps_per_sec: int, debug_text: Optional[str]):
         """
@@ -126,7 +132,9 @@ class Renderer:
             for j in range(self.__world.shape[1]):
                 printed = False
                 for o in Renderer.print_order:
-                    if self.__world[i][j][o]:
+                    pos = np.any(self.__character_layers[i, j]) if o == CHARACTER \
+                        else self.__world[i][j][o]
+                    if pos:
                         print(Renderer.unicodes[o], end='')
                         printed = True
                         break

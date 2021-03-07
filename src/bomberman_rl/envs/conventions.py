@@ -9,9 +9,10 @@ PLACE_BOMB = 5
 # World matrix's layers indices
 FIXED_BLOCK = 0
 BLOCK = 1
-CHARACTER = 2
-BOMB = 3
-FIRE = 4
+BOMB = 2
+FIRE = 3
+CHARACTER = 4  # Hard coded in bomberman_env.__build_observation
+ENEMIES = 5  # Hard coded in bomberman_env.__build_observation
 
 # Block sprite size
 BLOCK_SIZE = 16
