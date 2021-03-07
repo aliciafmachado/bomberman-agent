@@ -104,14 +104,15 @@ class Character(GameObject):
         """
         screen_pos = self._pos.copy().astype(np.float)
         screen_pos[0] -= 0.25  # Character sprite is 25% taller than blocks
-        
+        sprite_name = 'bomberman' + str(self.__idx + 1) + '_'
+
         # In case of death
         if self.__just_died:
             self.__just_died = False
             if not self.__stopped:
                 screen_pos -= self.__dir * (
                 (1 - (self.__animation_idx % frames_per_step + 1) / frames_per_step))
-            sprite_name = 'bomberman_die' + str(self.__animation_idx_death % 3 + 1)
+            sprite_name += 'die' + str(self.__animation_idx_death % 3 + 1)
             self.__animation_idx_death += 1
             display.blit(sprites_factory[sprite_name], (screen_pos[1] * BLOCK_SIZE,
                                                         screen_pos[0] * BLOCK_SIZE))
@@ -120,7 +121,6 @@ class Character(GameObject):
             return
 
         # Get correct animation frame
-        sprite_name = 'bomberman_'
         if self.__dir[0] == -1:
             sprite_name += 'up'
         elif self.__dir[0] == 1:
