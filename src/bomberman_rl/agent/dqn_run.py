@@ -20,7 +20,7 @@ def main():
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--save_model", type=str, default=None)
-    parser.add_argument("--evaluate", type=bool, default=False)
+    #parser.add_argument("--evaluate", type=bool, default=False)
     parser.add_argument("--verbose", type=bool, default=False)
     parser.add_argument("--memory_size", type=int, default=10000)
     parser.add_argument("--target_update", type=int, default=10)
