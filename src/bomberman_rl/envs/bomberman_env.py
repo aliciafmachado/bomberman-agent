@@ -252,22 +252,33 @@ class BombermanEnv(gym.Env):
     def __create_map_from_scratch(self) -> NDArray[bool]:
         m, n = self.size
         map = np.zeros((m, n, 4))
-        # walls
+
+        # Walls
         map[0, :, FIXED_BLOCK] = 1
         map[-1, :, FIXED_BLOCK] = 1
         map[:, 0, FIXED_BLOCK] = 1
         map[:, -1, FIXED_BLOCK] = 1
-        # fixed blocks
+
+        # Fixed blocks
         rows = [2 * i for i in range(1, m // 2)]
         cols = [2 * i for i in range(1, n // 2)]
         tuples = [(r, c, FIXED_BLOCK) for r in rows for c in cols]
         for t in tuples:
             map[t] = 1
-        # soft blocks
+
+        # Soft blocks
+        spawn_points = {(1, 1), (1, 2), (2, 1)}
+        if self.n_agents > 1:
+            spawn_points = spawn_points.union({(1, n - 2), (1, n - 3), (2, n - 2)})
+        if self.n_agents > 2:
+            spawn_points = spawn_points.union({(m - 2, 1), (m - 3, 1), (m - 2, 2)})
+        if self.n_agents > 3:
+            spawn_points = spawn_points.union({(m - 2, n - 2), (m - 2, n - 3), (m - 3, n - 2)})
+
         for i in range(1, m - 1):
             for j in range(1, n - 1):
                 # avoid certain positions
-                if (i, j) in [(1, 1), (1, 2), (2, 1)] or map[i, j, FIXED_BLOCK]:
+                if (i, j) in spawn_points or map[i, j, FIXED_BLOCK]:
                     continue
                 map[i, j, BLOCK] = np.random.rand() > 0.4
         return map
