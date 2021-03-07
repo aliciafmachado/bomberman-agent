@@ -33,7 +33,7 @@ class DQNAgent():
 
         # Temporary variable
         self.time = 0
-        self.max_time = 5
+        self.max_time = 6
 
         # The update frequence of the target net
         self.target_update = target_update
@@ -67,8 +67,8 @@ class DQNAgent():
             batch.state], 0).type(torch.FloatTensor)
         action_batch = torch.tensor(batch.action, device=self.device).unsqueeze(0)
         reward_batch = torch.tensor(batch.reward, device=self.device).unsqueeze(0)
-        time_batch = torch.tensor(batch.time, device=self.device)
-        
+        time_batch = torch.tensor(batch.time, device=self.device).unsqueeze(1) # TODO: fix this
+
         # First we calculate the Q(s_t, a) for the actions taken
         # so that we get the value that we would get from the state-action
         # in the batch
@@ -82,10 +82,7 @@ class DQNAgent():
         # the final states get state value equal 0 and the other ones that are
         # not final get their correct values
         next_state_values = torch.zeros(batch_size, device=self.device)
-        
-        # We decrease the timer for the next state
-        time_batch_next = torch.clamp(time_batch - 1, min=0)
-        next_state_values[non_final_mask] = self.targetNet(non_final_next_states, time_batch_next).max(1)[0].detach()
+        next_state_values[non_final_mask] = self.targetNet(non_final_next_states, time_batch).max(1)[0].detach()
 
         # Compute the expected Q values
         expected_state_action_values = (next_state_values * self.gamma) + reward_batch
@@ -106,8 +103,8 @@ class DQNAgent():
 
         return loss.detach().numpy()        
     
-    def select_action(self, state, time, current_episode, eps_decay=200., initial_eps=0.99, 
-        end_eps=0.2):
+    def select_action(self, state, time, current_episode, eps_decay=200., initial_eps=0.99,
+        end_eps=0.25):
         '''
         We select actions by taking either random actions or by
             taking the actions considering the value returned by the qNet
@@ -142,3 +139,6 @@ class DQNAgent():
             self.time = max(self.time - 1, 0)
 
         return chosen_action
+
+    def evaluate():
+        self.qNet.eval()

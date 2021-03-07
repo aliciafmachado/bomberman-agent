@@ -58,7 +58,7 @@ def main():
         while not done and repetitions < 50:
             # Select and perform an action
             action = dqn_agent.select_action(transform(state).unsqueeze(0).type(torch.FloatTensor).to(dqn_agent.device),
-                torch.tensor([dqn_agent.time], device=dqn_agent.device), i_episode, eps_decay=args.nb_episodes)
+                torch.tensor([dqn_agent.time], device=dqn_agent.device).unsqueeze(0), i_episode, eps_decay=args.nb_episodes)
 
             next_state, reward, done, _ = env.step(action.item())
             reward = torch.tensor([reward], device=dqn_agent.device)
@@ -116,7 +116,7 @@ def main():
     # Select and perform an action
     while not done and repetitions < 50:
         action = dqn_agent.select_action(transform(state).unsqueeze(0).type(torch.FloatTensor).to(dqn_agent.device),
-            torch.tensor([dqn_agent.time], device=dqn_agent.device), args.nb_episodes, eps_decay=args.nb_episodes)
+            torch.tensor([dqn_agent.time], device=dqn_agent.device).unsqueeze(0), args.nb_episodes, eps_decay=args.nb_episodes)
 
         next_state, reward, done, _ = env_eval.step(action.item())
         reward = torch.tensor([reward], device=dqn_agent.device)

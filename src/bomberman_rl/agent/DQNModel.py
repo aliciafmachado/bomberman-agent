@@ -33,7 +33,11 @@ class DQNModel(nn.Module):
             conv2d_output(conv2d_output(conv2d_output(width)))
         
         # The linear layer that will return the output
+<<<<<<< HEAD
         self.linear = nn.Linear(linear_input_size + n_actions, n_actions)
+=======
+        self.linear = nn.Linear(linear_input_size + 1, n_actions)
+>>>>>>> Addind time variable to input for the nn
 
     def forward(self, x, t):
         x = F.relu(self.bn1(self.conv1(x)))
@@ -41,7 +45,12 @@ class DQNModel(nn.Module):
         x = F.relu(self.bn3(self.conv3(x)))
 
         x = torch.cat([x.view(x.size(0), -1).clone().detach(), 
+<<<<<<< HEAD
             F.one_hot(t, num_classes=self.n_actions).to(self.device)], dim=1)
 
+=======
+            torch.tensor(t, device=self.device)], dim=1)
+        
+>>>>>>> Addind time variable to input for the nn
         out = self.linear(x)
         return out
