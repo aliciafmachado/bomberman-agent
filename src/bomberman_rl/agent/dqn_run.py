@@ -58,13 +58,13 @@ def main():
         while not done and repetitions < 50:
             # Select and perform an action
             action = dqn_agent.select_action(transform(state).unsqueeze(0).type(torch.FloatTensor).to(dqn_agent.device),
-                i_episode, eps_decay=args.nb_episodes)
+                torch.tensor([dqn_agent.time], device=dqn_agent.device).unsqueeze(0), i_episode, eps_decay=args.nb_episodes)
 
             next_state, reward, done, _ = env.step(action.item())
             reward = torch.tensor([reward], device=dqn_agent.device)
 
             # Store the transition in memory
-            memory.push(state, action, next_state, reward)
+            memory.push(state, action, next_state, reward, dqn_agent.time)
 
             # Next state
             state = next_state
@@ -103,7 +103,7 @@ def main():
     # Evaluate agent
     print("Evaluating agent . . . ")
 
-    env_eval = gym.make("bomberman_rl:bomberman-default-v0", display='draw')
+    env_eval = gym.make("bomberman_rl:bomberman-default-v0")
     state = env_eval.reset()
     env_eval.render()
     dqn_agent.qNet.eval()
@@ -112,7 +112,7 @@ def main():
     # Select and perform an action
     while not done:
         action = dqn_agent.select_action(transform(state).unsqueeze(0).type(torch.FloatTensor).to(dqn_agent.device),
-            args.nb_episodes, eps_decay=args.nb_episodes)
+            torch.tensor([dqn_agent.time], device=dqn_agent.device).unsqueeze(0), args.nb_episodes, eps_decay=args.nb_episodes)
 
         next_state, reward, done, _ = env_eval.step(action.item())
         reward = torch.tensor([reward], device=dqn_agent.device)

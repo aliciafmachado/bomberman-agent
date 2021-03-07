@@ -4,7 +4,7 @@ import random
 from collections import namedtuple
 
 Simulation = namedtuple('Simulation',
-                        ('state', 'action', 'next_state', 'reward'))
+                        ('state', 'action', 'next_state', 'reward', 'time'))
 
 class ReplayMemory(object):
 
