@@ -8,7 +8,8 @@ from bomberman_rl.envs.game_objects.character import Character
 from bomberman_rl.envs.sprites_factory import SpritesFactory
 
 from bomberman_rl.envs.conventions import LEFT, RIGHT, DOWN, UP, \
-    FIXED_BLOCK, BLOCK, BOMB, FIRE, BLOCK_SIZE, CENTER, HORIZONTAL, VERTICAL
+    FIXED_BLOCK, BLOCK, BOMB, FIRE, BLOCK_SIZE, CENTER, HORIZONTAL, VERTICAL, END_LEFT, \
+    END_RIGHT, END_DOWN, END_UP
 
 
 class Fire(GameObject):
@@ -92,6 +93,14 @@ class Fire(GameObject):
                 sprite_name = sprite_names + "_horizontal"
             elif tp == VERTICAL:
                 sprite_name = sprite_names + "_vertical"
+            elif tp == END_LEFT:
+                sprite_name = sprite_names + "_left"
+            elif tp == END_RIGHT:
+                sprite_name = sprite_names + "_right"
+            elif tp == END_UP:
+                sprite_name = sprite_names + "_top"
+            elif tp == END_DOWN:
+                sprite_name = sprite_names + "_bot"
             else:
                 raise Exception("Implement type = {}".format(tp))
             display.blit(sprites_factory[sprite_name],
@@ -123,7 +132,7 @@ class Fire(GameObject):
         for dir in Fire.dir_dict:
             hit = False
             fire_pos = np.copy(self._pos)
-            for _ in range(self.__tiles):
+            for i in range(self.__tiles):
                 if hit:
                     break
                 fire_pos = fire_pos + Fire.dir_dict[dir]
@@ -139,9 +148,16 @@ class Fire(GameObject):
                     bombs_hit.append(fire_pos)
                     break
                 if dir == LEFT or dir == RIGHT:
-                    coordinates[tuple(fire_pos)] = HORIZONTAL
+                    if i == self.__tiles - 1:
+                        coordinates[tuple(fire_pos)] = \
+                            END_LEFT if dir == LEFT else END_RIGHT
+                    else:
+                        coordinates[tuple(fire_pos)] = HORIZONTAL
                 elif dir == UP or dir == DOWN:
-                    coordinates[tuple(fire_pos)] = VERTICAL
+                    if i == self.__tiles - 1:
+                        coordinates[tuple(fire_pos)] = END_UP if dir == UP else END_DOWN
+                    else:
+                        coordinates[tuple(fire_pos)] = VERTICAL
             # Adding reward to player
             if not self.__reward_given and hit:
                 self.__owner.break_block()
