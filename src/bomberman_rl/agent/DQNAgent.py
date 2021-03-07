@@ -33,7 +33,7 @@ class DQNAgent():
 
         # Temporary variable
         self.time = 0
-        self.max_time = 6
+        self.max_time = 5
 
         # The update frequence of the target net
         self.target_update = target_update
@@ -43,7 +43,7 @@ class DQNAgent():
         self.optimizer = optim.Adam(self.qNet.parameters(), lr)
 
         # TODO: implement how to get to clip or not the weights
-        self.clip_val = True
+        self.clip_val = False
 
     def train(self, batch, batch_size):
         '''
@@ -67,7 +67,7 @@ class DQNAgent():
             batch.state], 0).type(torch.FloatTensor)
         action_batch = torch.tensor(batch.action, device=self.device).unsqueeze(0)
         reward_batch = torch.tensor(batch.reward, device=self.device).unsqueeze(0)
-        time_batch = torch.tensor(batch.time, device=self.device).unsqueeze(1) # TODO: fix this
+        time_batch = torch.tensor(batch.time, device=self.device)
 
         # First we calculate the Q(s_t, a) for the actions taken
         # so that we get the value that we would get from the state-action
@@ -82,7 +82,10 @@ class DQNAgent():
         # the final states get state value equal 0 and the other ones that are
         # not final get their correct values
         next_state_values = torch.zeros(batch_size, device=self.device)
-        next_state_values[non_final_mask] = self.targetNet(non_final_next_states, time_batch).max(1)[0].detach()
+        
+        # We decrease the timer for the next state
+        time_batch_next = torch.clamp(time_batch - 1, min=0)
+        next_state_values[non_final_mask] = self.targetNet(non_final_next_states, time_batch_next).max(1)[0].detach()
 
         # Compute the expected Q values
         expected_state_action_values = (next_state_values * self.gamma) + reward_batch
