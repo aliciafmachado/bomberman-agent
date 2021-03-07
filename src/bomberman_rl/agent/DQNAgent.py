@@ -142,6 +142,3 @@ class DQNAgent():
             self.time = max(self.time - 1, 0)
 
         return chosen_action
-
-    def evaluate():
-        self.qNet.eval()
