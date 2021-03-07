@@ -19,6 +19,7 @@ class DQNModel(nn.Module):
         @param n_actions: Number of possible actions
         '''
         super().__init__()
+        self.n_actions = n_actions
         self.conv1 = nn.Conv2d(n_dim, 8, kernel_size=3, stride=1)
         self.bn1 = nn.BatchNorm2d(8)
         self.conv2 = nn.Conv2d(8, 16, kernel_size=3, stride=1)
@@ -32,7 +33,7 @@ class DQNModel(nn.Module):
             conv2d_output(conv2d_output(conv2d_output(width)))
         
         # The linear layer that will return the output
-        self.linear = nn.Linear(linear_input_size + 1, n_actions)
+        self.linear = nn.Linear(linear_input_size + n_actions, n_actions)
 
     def forward(self, x, t):
         x = F.relu(self.bn1(self.conv1(x)))
@@ -40,7 +41,7 @@ class DQNModel(nn.Module):
         x = F.relu(self.bn3(self.conv3(x)))
 
         x = torch.cat([x.view(x.size(0), -1).clone().detach(), 
-            torch.tensor(t, device=self.device)], dim=1)
-        
+            F.one_hot(t, num_classes=self.n_actions).to(self.device)], dim=1)
+
         out = self.linear(x)
         return out
