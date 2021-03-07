@@ -4,7 +4,7 @@ import numpy as np
 import os
 
 from bomberman_rl.envs.conventions import STOP, PLACE_BOMB, LEFT, RIGHT, DOWN, UP, \
-    FIXED_BLOCK, BLOCK, BOMB, CHARACTER, FIRE, BLOCK_SIZE
+    FIXED_BLOCK, BLOCK, BOMB, FIRE, BLOCK_SIZE
 from bomberman_rl.envs.sprites_factory import SpritesFactory
 from bomberman_rl.envs.game_objects.game_object import GameObject
 
@@ -23,32 +23,38 @@ class Character(GameObject):
                 RIGHT: np.array([0, 1], dtype=np.int8),
                 DOWN: np.array([1, 0], dtype=np.int8),
                 UP: np.array([-1, 0], dtype=np.int8)}
+    bomb_limit = 1
+    alive_reward = 0
+    block_break_reward = 100
+    dead_reward = -10
+    kill_reward = 1000
 
-    def __init__(self, pos: NDArray[np.int8]):
+    def __init__(self, pos: NDArray[np.int8], idx: int):
         """
         Default constructor.
         Args:
             pos: Tile i, j in the game map.
+            idx: Agent's index
         """
         super().__init__(pos)
+        self.__idx = idx
         self.__dir = self.dir_dict[DOWN]
         self.__stopped = True
         self.__animation_idx = 0
         self.__dead = False
+        self.__just_died = False
         self.__block_break_cumulative_reward = 0
         self.__animation_idx_death = 0
+        self.__placed_bombs = 0
 
-        # Rewards
-        self.__alive_reward = 0
-        self.__block_break_reward = 100
-        self.__dead_reward = -10
-
-    def update(self, action: int, world: NDArray[bool]) -> Tuple[bool, int]:
+    def update(self, action: int, world: NDArray[bool], world_layer: NDArray[bool]) -> \
+            Tuple[bool, int]:
         """
         Updates the character's position according to its action and to the world.
         Args:
             action: One of the actions defined in conventions.py.
             world: The map's matrix.
+            world_layer: The character's layer in the world.
 
         Returns:
             alive: True if the character is still alive.
@@ -56,7 +62,7 @@ class Character(GameObject):
         """
 
         # Remove player from map
-        world[self._pos[0], self._pos[1], CHARACTER] = False
+        world_layer[self._pos[0], self._pos[1]] = False
         self.__stopped = True
 
         if self.__dead:
@@ -79,9 +85,10 @@ class Character(GameObject):
         # Check if there's fire in the next position
         if world[self._pos[0], self._pos[1], FIRE]:
             self.__dead = True
+            self.__just_died = True
             return False, self.__get_reward()
 
-        world[self._pos[0], self._pos[1], CHARACTER] = True
+        world_layer[self._pos[0], self._pos[1]] = True
 
         return True, self.__get_reward()
 
@@ -98,8 +105,9 @@ class Character(GameObject):
         screen_pos = self._pos.copy().astype(np.float)
         screen_pos[0] -= 0.25  # Character sprite is 25% taller than blocks
         
-        # in case of death
-        if self.__dead:
+        # In case of death
+        if self.__just_died:
+            self.__just_died = False
             if not self.__stopped:
                 screen_pos -= self.__dir * (
                 (1 - (self.__animation_idx % frames_per_step + 1) / frames_per_step))
@@ -108,6 +116,9 @@ class Character(GameObject):
             display.blit(sprites_factory[sprite_name], (screen_pos[1] * BLOCK_SIZE,
                                                         screen_pos[0] * BLOCK_SIZE))
             return
+        elif self.__dead:
+            return
+
         # Get correct animation frame
         sprite_name = 'bomberman_'
         if self.__dir[0] == -1:
@@ -133,14 +144,29 @@ class Character(GameObject):
         display.blit(sprites_factory[sprite_name], (screen_pos[1] * BLOCK_SIZE,
                                                     screen_pos[0] * BLOCK_SIZE))
 
+    def get_idx(self) -> int:
+        return self.__idx
+
     def break_block(self):
-        self.__block_break_cumulative_reward += self.__block_break_reward
+        self.__block_break_cumulative_reward += Character.block_break_reward
+
+    def can_place_bomb(self) -> bool:
+        return self.__placed_bombs < Character.bomb_limit
+
+    def place_bomb(self):
+        self.__placed_bombs += 1
+
+    def bomb_exploded(self):
+        self.__placed_bombs -= 1
+
+    def just_died(self) -> bool:
+        return self.__just_died
 
     def __get_reward(self):
         if self.__dead:
             self.__block_break_cumulative_reward = 0
-            return self.__dead_reward
+            return Character.dead_reward
         else:
             block_reward = self.__block_break_cumulative_reward
             self.__block_break_cumulative_reward = 0
-            return self.__alive_reward + block_reward
+            return Character.alive_reward + block_reward

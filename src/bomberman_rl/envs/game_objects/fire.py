@@ -1,8 +1,10 @@
 from nptyping import NDArray
 import numpy as np
 import pygame
+from typing import Dict, Tuple
 
 from bomberman_rl.envs.game_objects.game_object import GameObject
+from bomberman_rl.envs.game_objects.character import Character
 from bomberman_rl.envs.sprites_factory import SpritesFactory
 
 from bomberman_rl.envs.conventions import LEFT, RIGHT, DOWN, UP, \
@@ -18,18 +20,19 @@ class Fire(GameObject):
                 DOWN: np.array([1, 0], dtype=np.int8),
                 UP: np.array([-1, 0], dtype=np.int8)}
 
-    def __init__(self, pos: NDArray[np.int8], duration, tiles, world, owner):
+    def __init__(self, pos: NDArray[np.int8], duration: int, tile_range: int,
+                 world: NDArray, owner: Character):
         """
         :param pos: The center of the fire
         :param duration: for how many time
-        :param tiles:
+        :param tile_range:
         :param world:
         :param owner:
         """
         super().__init__(pos)
         self.__timer = -1
         self.__duration = duration
-        self.__tiles = tiles
+        self.__tiles = tile_range
         self.__world = world
         self.__owner = owner
         self.__reward_given = False
@@ -94,6 +97,12 @@ class Fire(GameObject):
             display.blit(sprites_factory[sprite_name],
                          (key[1] * BLOCK_SIZE, key[0] * BLOCK_SIZE))
 
+    def get_occupied_tiles(self) -> Dict[Tuple[int, int], int]:
+        return self.__occupied_tiles
+
+    def get_owner(self) -> Character:
+        return self.__owner
+
     def __add_fire_to_map(self):
         """
         Adds this fire to the map
@@ -107,14 +116,13 @@ class Fire(GameObject):
         Gets all of the coordinates that belong to the fire
         :return:
         """
-        coordinates = {}
-        coordinates[tuple(np.copy(self._pos))] = CENTER
+        coordinates = {tuple(self._pos): CENTER}
         blocks_hit = []
         bombs_hit =[]
         # Grows the fire in each direction
         for dir in Fire.dir_dict:
             hit = False
-            fire_pos = self._pos
+            fire_pos = np.copy(self._pos)
             for _ in range(self.__tiles):
                 if hit:
                     break
@@ -131,9 +139,9 @@ class Fire(GameObject):
                     bombs_hit.append(fire_pos)
                     break
                 if dir == LEFT or dir == RIGHT:
-                    coordinates[tuple(np.copy(fire_pos))] = HORIZONTAL
+                    coordinates[tuple(fire_pos)] = HORIZONTAL
                 elif dir == UP or dir == DOWN:
-                    coordinates[tuple(np.copy(fire_pos))] = VERTICAL
+                    coordinates[tuple(fire_pos)] = VERTICAL
             # Adding reward to player
             if not self.__reward_given and hit:
                 self.__owner.break_block()

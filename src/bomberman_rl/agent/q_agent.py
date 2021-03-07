@@ -29,6 +29,10 @@ class QAgent(TrainableAgent):
         :return: the choice of action
         """
 
+        if self.__mode == 'train' and exploration_factor is None:
+            raise ValueError(
+                'Agent must receive exploration factor to choose action in train mode')
+
         chosen_action = None
         best_action = None
 
