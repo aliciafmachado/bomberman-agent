@@ -82,8 +82,9 @@ class Renderer:
             character_layers: Game's characters matrix.
             game_objects: List of game objects in the world.
         """
-        del self.__font  # Fixes segfault https://github.com/renpy/pygame_sdl2/issues/112
-        pygame.quit()
+        if self.__mode == "human":
+            del self.__font  # Fixes segfault https://github.com/renpy/pygame_sdl2/issues/112
+            pygame.quit()
         self.__init__(world, character_layers, game_objects)
 
     def __render_human(self, steps_per_sec: int, debug_text: Optional[str]):
