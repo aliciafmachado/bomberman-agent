@@ -7,6 +7,7 @@ import random
 import numpy as np
 import torch.optim as optim
 from bomberman_rl.agent.DQNModel import DQNModel
+from bomberman_rl.envs.conventions import PLACE_BOMB
 import torchvision.transforms as transforms
 
 class DQNAgent():
@@ -25,15 +26,15 @@ class DQNAgent():
             update targetNet
         @param lr: learning rate
         '''
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.targetNet = DQNModel(height, width, n_dim=n_dim, device=self.device)
-        self.qNet = DQNModel(height, width, n_dim=n_dim, device=self.device)
-        self.n_actions = n_actions
-        self.gamma = gamma
-
         # Temporary variable
         self.time = 0
-        self.max_time = 5
+        self.max_time = 9
+
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.targetNet = DQNModel(height, width, n_dim=n_dim, time_size=self.max_time+1, device=self.device)
+        self.qNet = DQNModel(height, width, n_dim=n_dim, time_size=self.max_time+1, device=self.device)
+        self.n_actions = n_actions
+        self.gamma = gamma
 
         # The update frequence of the target net
         self.target_update = target_update
@@ -68,6 +69,7 @@ class DQNAgent():
         action_batch = torch.tensor(batch.action, device=self.device).unsqueeze(0)
         reward_batch = torch.tensor(batch.reward, device=self.device).unsqueeze(0)
         time_batch = torch.tensor(batch.time, device=self.device)
+        next_time_batch = torch.tensor(batch.next_time, device=self.device)
 
         # First we calculate the Q(s_t, a) for the actions taken
         # so that we get the value that we would get from the state-action
@@ -84,8 +86,7 @@ class DQNAgent():
         next_state_values = torch.zeros(batch_size, device=self.device)
         
         # We decrease the timer for the next state
-        time_batch_next = torch.clamp(time_batch - 1, min=0)
-        next_state_values[non_final_mask] = self.targetNet(non_final_next_states, time_batch_next).max(1)[0].detach()
+        next_state_values[non_final_mask] = self.targetNet(non_final_next_states, next_time_batch).max(1)[0].detach()
 
         # Compute the expected Q values
         expected_state_action_values = (next_state_values * self.gamma) + reward_batch
@@ -135,7 +136,7 @@ class DQNAgent():
             chosen_action = torch.tensor([[random.randrange(self.n_actions)]], 
                 device=self.device, dtype=torch.long)
 
-        if chosen_action == 5:
+        if chosen_action == PLACE_BOMB:
             self.time = self.max_time
 
         else:

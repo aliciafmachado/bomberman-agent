@@ -33,15 +33,14 @@ def main():
     if args.seed != None:
         random.seed(args.seed)
         torch.manual_seed(args.seed)
-    
     # Create a transform to convert the matrix to a tensor
     transform = transforms.ToTensor()
 
     # Create environment
-    env = gym.make("bomberman_rl:bomberman-default-v0")
+    env = gym.make("bomberman_rl:bomberman-minimal-v0")
 
     # Create agent
-    dqn_agent = DQNAgent(11, 13, 5, lr=args.lr)
+    dqn_agent = DQNAgent(env.size[0], env.size[1], 5, lr=args.lr)
 
     # Creating the memory
     memory = ReplayMemory(args.memory_size)
@@ -54,20 +53,25 @@ def main():
         done = False
         loss = -1
         repetitions = 0
+        time = 0
+        next_time = 0
 
         while not done and repetitions < 50:
             # Select and perform an action
             action = dqn_agent.select_action(transform(state).unsqueeze(0).type(torch.FloatTensor).to(dqn_agent.device),
                 torch.tensor([dqn_agent.time], device=dqn_agent.device), i_episode, eps_decay=args.nb_episodes)
 
+            next_time = dqn_agent.time
+
             next_state, reward, done, _ = env.step(action.item())
             reward = torch.tensor([reward], device=dqn_agent.device)
 
             # Store the transition in memory
-            memory.push(state, action, next_state, reward, dqn_agent.time)
+            memory.push(state, action, next_state, reward, time, next_time)
 
             # Next state
             state = next_state
+            time = next_time
 
             if len(memory) >= args.batch_size:
                 sample = memory.sample(args.batch_size)
@@ -106,9 +110,8 @@ def main():
     # Evaluate agent
     print("Evaluating agent . . . ")
 
-    env_eval = gym.make("bomberman_rl:bomberman-default-v0")
-    state = env_eval.reset()
-    env_eval.render()
+    state = env.reset()
+    env.render()
     dqn_agent.qNet.eval()
     done = False
     repetitions = 0
@@ -116,15 +119,15 @@ def main():
     # Select and perform an action
     while not done and repetitions < 50:
         action = dqn_agent.select_action(transform(state).unsqueeze(0).type(torch.FloatTensor).to(dqn_agent.device),
-            torch.tensor([dqn_agent.time], device=dqn_agent.device), args.nb_episodes, eps_decay=args.nb_episodes)
+            torch.tensor([dqn_agent.time], device=dqn_agent.device), args.nb_episodes, eps_decay=args.nb_episodes, end_eps=0)
 
-        next_state, reward, done, _ = env_eval.step(action.item())
+        next_state, reward, done, _ = env.step(action.item())
         reward = torch.tensor([reward], device=dqn_agent.device)
 
         # Next state
         state = next_state
 
-        env_eval.render()
+        env.render()
         repetitions += 1
 
     print("Finished!")
