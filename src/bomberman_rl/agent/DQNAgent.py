@@ -43,7 +43,7 @@ class DQNAgent():
         self.optimizer = optim.Adam(self.qNet.parameters(), lr)
 
         # TODO: implement how to get to clip or not the weights
-        self.clip_val = False
+        self.clip_val = True
 
     def train(self, batch, batch_size):
         '''
@@ -107,7 +107,7 @@ class DQNAgent():
         return loss.detach().numpy()        
     
     def select_action(self, state, time, current_episode, eps_decay=200., initial_eps=0.99, 
-        end_eps=0.25):
+        end_eps=0.2):
         '''
         We select actions by taking either random actions or by
             taking the actions considering the value returned by the qNet

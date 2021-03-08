@@ -111,9 +111,10 @@ def main():
     env_eval.render()
     dqn_agent.qNet.eval()
     done = False
+    repetitions = 0
 
     # Select and perform an action
-    while not done:
+    while not done and repetitions < 50:
         action = dqn_agent.select_action(transform(state).unsqueeze(0).type(torch.FloatTensor).to(dqn_agent.device),
             torch.tensor([dqn_agent.time], device=dqn_agent.device), args.nb_episodes, eps_decay=args.nb_episodes)
 
@@ -124,6 +125,7 @@ def main():
         state = next_state
 
         env_eval.render()
+        repetitions += 1
 
     print("Finished!")
 
