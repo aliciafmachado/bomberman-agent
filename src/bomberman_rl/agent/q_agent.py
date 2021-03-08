@@ -1,5 +1,4 @@
 import numpy as np
-import pickle
 from .trainable_agent import TrainableAgent
 from bomberman_rl.envs.conventions import PLACE_BOMB
 
