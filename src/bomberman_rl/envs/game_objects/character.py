@@ -25,9 +25,9 @@ class Character(GameObject):
                 UP: np.array([-1, 0], dtype=np.int8)}
     bomb_limit = 1
     alive_reward = 0
-    block_break_reward = 100
-    dead_reward = -10
-    kill_reward = 1000
+    block_break_reward = 0.5
+    dead_reward = -0.1
+    kill_reward = 1
 
     def __init__(self, pos: NDArray[np.int8], idx: int):
         """
