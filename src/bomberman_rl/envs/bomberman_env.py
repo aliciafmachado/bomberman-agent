@@ -69,7 +69,7 @@ class BombermanEnv(gym.Env):
         :return: observation(s), reward(s), done and info
         """
         if self.n_agents == 1:
-            assert isinstance(action, int)
+            assert np.issubdtype(type(action), int)
             action = [action]
         else:
             assert isinstance(action, list)
