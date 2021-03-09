@@ -30,7 +30,6 @@ def main():
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--plot_loss", type=str, default=None)
 
-
     args = parser.parse_args()
     losses = []
 
