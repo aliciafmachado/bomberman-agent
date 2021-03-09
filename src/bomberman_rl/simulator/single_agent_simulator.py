@@ -13,7 +13,7 @@ class SingleAgentSimulator(BaseSimulator):
                  display="stdout",
                  nb_runs=1,
                  max_steps=int(1e3),
-                 fps=1):
+                 fps=3):
         """
         :param env: The environment to be used
         :param agent: The agent to be trained

@@ -23,7 +23,7 @@ cd src/scripts
 Then, train and run the trained agent:
 
 ```
-python train_q_agent.py --agent-name qagent --environment bomberman_rl:bomberman-minimal-v0
+python train_q_agent.py --agent-name qagent --environment bomberman_rl:bomberman-minimal-v0 --display human
 python simulate_single_agent.py --agent-name qagent --environment bomberman_rl:bomberman-minimal-v0
 ```
 
