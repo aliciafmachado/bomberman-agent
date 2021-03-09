@@ -68,7 +68,7 @@ class DQNAgentSingleCoach(BaseSimulator):
         """
 
         observation = self._env.reset()
-        observation = torch.tensor([observation])
+        observation = self.__transform(observation).unsqueeze(0).float()
         self.__agent.reset()
         self.__render(display, None)
 
@@ -88,7 +88,7 @@ class DQNAgentSingleCoach(BaseSimulator):
 
             # Perform last action
             next_observation, reward, done, _ = self._env.step(action)
-            next_observation = torch.tensor([next_observation])
+            next_observation = self.__transform(next_observation).unsqueeze(0).float()
 
             # Store the transition in memory
             self.__memory.push(observation, action, next_observation, reward, time,

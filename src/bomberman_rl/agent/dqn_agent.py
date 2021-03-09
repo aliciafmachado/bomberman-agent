@@ -122,7 +122,7 @@ class DQNAgent(TrainableAgent):
         eps_threshold = initial_eps + (end_eps - initial_eps) * min(
             1., float(current_episode) / eps_decay)
 
-        if self.mode == 'train' and random.random() > eps_threshold:
+        if self.mode == 'eval' or random.random() > eps_threshold:
             with torch.no_grad():
                 state = state.to(self.device)
                 time = torch.tensor([self.time], device=self.device)
