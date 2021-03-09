@@ -35,9 +35,9 @@ class DQNModel(nn.Module):
         
         # The linear layer that will return the output
         self.time_size = time_size
-        self.linear = nn.Linear(linear_input_size + time_size, 200)
+        self.linear = nn.Linear(linear_input_size, 200)
         self.linear2 = nn.Linear(200, 50)
-        self.linear3 = nn.Linear(50, n_actions)
+        self.linear3 = nn.Linear(50 + time_size, n_actions)
 
     def forward(self, x, t):
         x = F.relu(self.bn1(self.conv1(x)))
@@ -45,9 +45,15 @@ class DQNModel(nn.Module):
         x = F.relu(self.bn3(self.conv3(x)))
         x = F.relu(self.bn4(self.conv4(x)))
 
-        x = torch.cat([x.view(x.size(0), -1).clone().detach(), 
-            F.one_hot(t, num_classes=self.time_size).to(self.device)], dim=1)
+        # x = torch.cat([x.view(x.size(0), -1).clone().detach(), 
+        #     F.one_hot(t, num_classes=self.time_size).to(self.device)], dim=1)
+
+        x = x.view(x.size(0), -1).clone().detach()
 
         out = F.relu(self.linear(x))
         out = F.relu(self.linear2(out))
+
+        out = torch.cat([out, 
+            F.one_hot(t, num_classes=self.time_size).to(self.device)], dim=1)
+
         return self.linear3(out)

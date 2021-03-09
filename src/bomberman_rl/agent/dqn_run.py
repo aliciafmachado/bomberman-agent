@@ -71,14 +71,23 @@ def main():
             next_state, reward, done, _ = env.step(action.item())
             reward = torch.tensor([reward], device=dqn_agent.device)
 
-            # Store the transition in memory
+            # # Store the transition in memory
+            # if reward == 0:
+            #     prob = 0.01
+            # if reward < 0:
+            #     prob = 0.01
+            # if reward > 0:
+            #     prob = 1
+
+            # sample_r = random.random()
+            # if sample_r < prob:
             memory.push(state, action, next_state, reward, time, next_time)
 
             # Next state
             state = next_state
             time = next_time
 
-            if len(memory) >= args.batch_size:
+            if len(memory) >= 2 * args.batch_size:
                 sample = memory.sample(args.batch_size)
                 batch = Simulation(*zip(*sample))
                 loss = dqn_agent.train(batch, args.batch_size)
