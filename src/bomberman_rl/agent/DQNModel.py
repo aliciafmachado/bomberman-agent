@@ -29,7 +29,6 @@ class DQNModel(nn.Module):
         self.conv4 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=True)
         self.bn4 = nn.BatchNorm2d(64)
         self.device = device
-        self.to(device)
 
         # We calculate the dimensions after the convolutional layers
         linear_input_size = 64 * conv2d_output(height) * conv2d_output(width)
@@ -39,6 +38,8 @@ class DQNModel(nn.Module):
         self.linear = nn.Linear(linear_input_size + time_size, 200)
         self.linear2 = nn.Linear(200, 50)
         self.linear3 = nn.Linear(50, n_actions)
+
+        self.to(device)
 
     def forward(self, x, t):
         x = F.relu(self.bn1(self.conv1(x)))
