@@ -104,7 +104,7 @@ class DQNAgent(TrainableAgent):
 
         self.optimizer.step()
 
-        return loss.detach().numpy()
+        return loss.cpu().detach().numpy()
 
     def choose_action(self, state: torch.Tensor, current_episode: int, eps_decay: int,
                       initial_eps: float = 0.99, end_eps: float = 0.2):
@@ -133,10 +133,11 @@ class DQNAgent(TrainableAgent):
                 # all the ones calculated by the neural network
                 self.q_net.eval()
                 chosen_action = self.q_net(state, time).max(1)[1].view(1, 1)
+                chosen_action = chosen_action.cpu().detach()
         else:
             # We take a random action
             chosen_action = torch.tensor([[random.randrange(self.n_actions)]],
-                                         device=self.device, dtype=torch.long)
+                                         dtype=torch.long)
 
         if chosen_action == PLACE_BOMB:
             self.time = self.max_time

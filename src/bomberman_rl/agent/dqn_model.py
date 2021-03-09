@@ -43,6 +43,8 @@ class DQNModel(nn.Module):
         self.linear2 = nn.Linear(200, 50)
         self.linear3 = nn.Linear(50, n_actions)
 
+        self.to(device)
+
     def forward(self, x, t):
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
