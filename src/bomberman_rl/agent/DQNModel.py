@@ -29,6 +29,7 @@ class DQNModel(nn.Module):
         self.conv4 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=True)
         self.bn4 = nn.BatchNorm2d(64)
         self.device = device
+        self.to(device)
 
         # We calculate the dimensions after the convolutional layers
         linear_input_size = 64 * conv2d_output(height) * conv2d_output(width)
