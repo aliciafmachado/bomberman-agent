@@ -1,4 +1,5 @@
 import argparse
+import gym
 from bomberman_rl.simulator.q_agent_single_coach import QAgentSingleCoach
 from bomberman_rl.agent.q_agent import QAgent
 
@@ -20,7 +21,8 @@ else:
     agent = QAgent()
 
 # Running train
-coach = QAgentSingleCoach(args.environment, agent, "stdout")
+env = gym.make(args.environment)
+coach = QAgentSingleCoach(env, agent, "stdout")
 coach.run()
 
 # Saving result

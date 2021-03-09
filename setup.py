@@ -14,6 +14,7 @@ setup(name='bomberman_rl',
                 'gym>=0.18.0',
                 'nptyping>=1.4.0',
                 'pygame>=2.0.0',
+                'matplotlib>=3.0.0',
                 'numpy>=1.19',
                 'torch',
                 'torchvision'

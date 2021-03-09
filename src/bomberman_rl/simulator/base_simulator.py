@@ -17,12 +17,12 @@ class BaseSimulator:
         PLACE_BOMB: "PLACE_BOMB"
     }
 
-    def __init__(self, env_name, display_mode='print'):
+    def __init__(self, env, display_mode='print'):
         """
-        :param env_name: The environment to be used
+        :param env: The environment to be used
         """
 
-        self._env = gym.make(env_name)
+        self._env = env
         self._display = display_mode
 
     def run(self):

@@ -6,8 +6,8 @@ from collections import namedtuple
 Simulation = namedtuple('Simulation',
                         ('state', 'action', 'next_state', 'reward', 'time', 'next_time'))
 
-class ReplayMemory(object):
 
+class ReplayMemory(object):
     def __init__(self, capacity):
         self.capacity = capacity
         self.memory = []
