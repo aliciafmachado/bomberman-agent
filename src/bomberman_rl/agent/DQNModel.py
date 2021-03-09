@@ -11,7 +11,7 @@ import torch
 # state and the current one
 class DQNModel(nn.Module):
 
-    def __init__(self, height, width, n_dim, device, n_actions=6):
+    def __init__(self, height, width, n_dim, device, time_size, n_actions=6):
         '''
         @param height: height of the environemnt frame
         @param width: width of the environment frame
@@ -22,20 +22,20 @@ class DQNModel(nn.Module):
         self.n_actions = n_actions
         self.conv1 = nn.Conv2d(n_dim, 16, kernel_size=3, stride=1)
         self.bn1 = nn.BatchNorm2d(16)
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1)
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=True)
         self.bn2 = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 64, kernel_size=3, stride=1)
+        self.conv3 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=True)
         self.bn3 = nn.BatchNorm2d(64)
-        self.conv4 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
+        self.conv4 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=True)
         self.bn4 = nn.BatchNorm2d(64)
         self.device = device
 
         # We calculate the dimensions after the convolutional layers
-        linear_input_size = 64 * conv2d_output(conv2d_output(conv2d_output(conv2d_output(height)))) * \
-            conv2d_output(conv2d_output(conv2d_output(conv2d_output(width))))
+        linear_input_size = 64 * conv2d_output(height) * conv2d_output(width)
         
         # The linear layer that will return the output
-        self.linear = nn.Linear(linear_input_size + n_actions, 200)
+        self.time_size = time_size
+        self.linear = nn.Linear(linear_input_size + time_size, 200)
         self.linear2 = nn.Linear(200, 50)
         self.linear3 = nn.Linear(50, n_actions)
 
@@ -46,7 +46,7 @@ class DQNModel(nn.Module):
         x = F.relu(self.bn4(self.conv4(x)))
 
         x = torch.cat([x.view(x.size(0), -1).clone().detach(), 
-            F.one_hot(t, num_classes=self.n_actions).to(self.device)], dim=1)
+            F.one_hot(t, num_classes=self.time_size).to(self.device)], dim=1)
 
         out = F.relu(self.linear(x))
         out = F.relu(self.linear2(out))

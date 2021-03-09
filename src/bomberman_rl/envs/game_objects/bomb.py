@@ -5,14 +5,16 @@ import os
 from bomberman_rl.envs.conventions import BLOCK_SIZE, BOMB
 from bomberman_rl.envs.sprites_factory import SpritesFactory
 from bomberman_rl.envs.game_objects.game_object import GameObject
+from bomberman_rl.envs.game_objects.character import Character
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 import pygame
 
 
 class Bomb(GameObject):
-    def __init__(self, pos: NDArray[np.int8], force: int = 2, duration=6):
+    def __init__(self, pos: NDArray[np.int8], owner: Character, force: int = 2, duration=6):
         super().__init__(pos)
+        self.__owner = owner
         self.__force = force
         self.__duration = duration
         self.__animation_idx = 0
@@ -43,5 +45,5 @@ class Bomb(GameObject):
     def explode(self):
         self.__timer = self.__duration
 
-    def getTimer(self):
-        return self.__timer
+    def get_owner(self):
+        return self.__owner

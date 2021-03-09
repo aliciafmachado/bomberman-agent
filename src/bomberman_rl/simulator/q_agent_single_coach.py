@@ -9,10 +9,6 @@ class QAgentSingleCoach(BaseSimulator):
     """
     Teaches a single QAgent to play alone
     """
-    MAX_STEPS = int(1e7)
-    SHOW_EACH = 5000
-    NUMBER_PASSES = 10000
-    RENDER_DELAY = 0.1
 
     def __init__(self, env_name, agent,
                  display="none",
@@ -82,6 +78,8 @@ class QAgentSingleCoach(BaseSimulator):
         for i in range(self.__max_steps):
             # Check if it's already over
             if not np.any(observation[:, :, BLOCK]) or self.__done:
+                self.__render(display, "End of game")
+                # print(self.__agent.get_q_table_size())
                 return
 
             # Perform last action
@@ -101,6 +99,7 @@ class QAgentSingleCoach(BaseSimulator):
     def __render(self, display, info):
         # TODO mode this method to renderer
         if display is not "none":
-            print('\033c')
-            print(info)
-            self._env.render(mode=display, steps_per_sec=self.__fps)
+            pass
+            # print('\033c')
+            # print(info)
+            # self._env.render(mode=display, steps_per_sec=self.__fps)

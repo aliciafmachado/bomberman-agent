@@ -12,8 +12,11 @@ setup(name='bomberman_rl',
       python_requires='>=3.6',
       install_requires=[
                 'gym>=0.18.0',
-                'nptyping',
-                'pygame'
+                'nptyping>=1.4.0',
+                'pygame>=2.0.0',
+                'numpy>=1.19',
+                'torch',
+                'torchvision'
             ],
       setup_requires=['pytest-runner'],
       tests_require=['pytest']

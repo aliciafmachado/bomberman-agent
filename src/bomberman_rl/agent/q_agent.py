@@ -1,5 +1,4 @@
 import numpy as np
-import pickle
 from .trainable_agent import TrainableAgent
 from bomberman_rl.envs.conventions import PLACE_BOMB
 
@@ -28,6 +27,10 @@ class QAgent(TrainableAgent):
         :param exploration_factor: if in train mode, controls the probability of choosing a random action
         :return: the choice of action
         """
+
+        if self.__mode == 'train' and exploration_factor is None:
+            raise ValueError(
+                'Agent must receive exploration factor to choose action in train mode')
 
         chosen_action = None
         best_action = None
