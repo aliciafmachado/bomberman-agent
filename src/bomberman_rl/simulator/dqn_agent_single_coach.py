@@ -55,6 +55,12 @@ class DQNAgentSingleCoach(BaseSimulator):
         # Switch agent to test mode
         self.__agent.switch_mode('eval')
 
+    def simulate(self, n_episodes=1):
+        self.__agent.switch_mode('eval')
+
+        for i in range(n_episodes):
+            self.__run_single_simulation(self._display, i)
+
     def __run_single_simulation(self, display, idx, verbose=False):
         """
         Does one simulation pass until the agent breaks all of the blocks or until it dies
@@ -62,7 +68,7 @@ class DQNAgentSingleCoach(BaseSimulator):
         """
 
         observation = self._env.reset()
-        observation = self.__transform(observation).unsqueeze(0).float()
+        observation = torch.tensor([observation])
         self.__agent.reset()
         self.__render(display, None)
 
@@ -82,7 +88,7 @@ class DQNAgentSingleCoach(BaseSimulator):
 
             # Perform last action
             next_observation, reward, done, _ = self._env.step(action)
-            next_observation = self.__transform(next_observation).unsqueeze(0).float()
+            next_observation = torch.tensor([next_observation])
 
             # Store the transition in memory
             self.__memory.push(observation, action, next_observation, reward, time,

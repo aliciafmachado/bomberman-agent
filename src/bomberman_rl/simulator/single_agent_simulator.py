@@ -57,7 +57,7 @@ class SingleAgentSimulator(BaseSimulator):
 
         for i in range(self.__max_steps):
             # Check if it's already over
-            if not np.any(observation[:, :, BLOCK]) or self.__done:
+            if self.__done:
                 return
 
             # Perform last action

@@ -1,8 +1,6 @@
 import torch
 import random
-import numpy as np
-import torch.optim as optim
-import torchvision.transforms as transforms
+from torch import optim
 
 from bomberman_rl.agent.trainable_agent import TrainableAgent
 from bomberman_rl.agent.dqn_model import DQNModel
