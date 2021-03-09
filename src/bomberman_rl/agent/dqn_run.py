@@ -3,11 +3,13 @@
 from bomberman_rl.memory.ReplayMemory import ReplayMemory
 from bomberman_rl.memory.ReplayMemory import Simulation
 from bomberman_rl.agent.DQNAgent import DQNAgent
+from matplotlib import pyplot as plt
 import torchvision.transforms as transforms
 import gym
 import argparse
 import torch
 import os
+import numpy as np
 
 def main():
     # Parser
@@ -25,9 +27,11 @@ def main():
     parser.add_argument("--memory_size", type=int, default=10000)
     parser.add_argument("--target_update", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--plot_loss", type=str, default=None)
 
 
     args = parser.parse_args()
+    losses = []
 
     # Args
     if args.seed != None:
@@ -42,6 +46,7 @@ def main():
 
     # Create agent
     dqn_agent = DQNAgent(11, 13, 5, lr=args.lr)
+    dqn_agent.targetNet.eval()
 
     # Creating the memory
     memory = ReplayMemory(args.memory_size)
@@ -76,6 +81,9 @@ def main():
 
             repetitions += 1
 
+            if loss != -1:
+                losses.append(loss)
+
             if args.verbose == True:
                 print('Episode[{}/{}], Loss: {:.4f}, Buffer state[{}/{}], Reward: {}'.format(i_episode+1, 
                     args.nb_episodes, loss, len(memory), args.memory_size, reward.item()))
@@ -85,8 +93,15 @@ def main():
 
         # Update or not the targetNet
         if (i_episode + 1) % args.target_update == 0: 
+            dqn_agent.targetNet.train()
             dqn_agent.targetNet.load_state_dict(dqn_agent.qNet.state_dict())
+            dqn_agent.targetNet.eval()
 
+    if args.plot_loss != None:
+        plt.figure()
+        running_mean = np.convolve(losses, np.ones(100)/100, mode="valid")
+        plt.plot(np.arange(len(running_mean)), running_mean)
+        plt.savefig(args.plot_loss + ".png")
 
     print("Ended training . . . ")
 
@@ -116,7 +131,7 @@ def main():
     # Select and perform an action
     while not done and repetitions < 50:
         action = dqn_agent.select_action(transform(state).unsqueeze(0).type(torch.FloatTensor).to(dqn_agent.device),
-            torch.tensor([dqn_agent.time], device=dqn_agent.device), args.nb_episodes, eps_decay=args.nb_episodes)
+            torch.tensor([dqn_agent.time], device=dqn_agent.device), args.nb_episodes, eps_decay=args.nb_episodes, end_eps=0.0)
 
         next_state, reward, done, _ = env_eval.step(action.item())
         reward = torch.tensor([reward], device=dqn_agent.device)

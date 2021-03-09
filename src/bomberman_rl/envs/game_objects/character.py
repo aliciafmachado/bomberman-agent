@@ -39,9 +39,10 @@ class Character(GameObject):
         self.__animation_idx_death = 0
 
         # Rewards
+        # put the right one back TODO
         self.__alive_reward = 0
-        self.__block_break_reward = 100
-        self.__dead_reward = -10
+        self.__block_break_reward = +1
+        self.__dead_reward = -0.1
 
     def update(self, action: int, world: NDArray[bool]) -> Tuple[bool, int]:
         """
