@@ -105,7 +105,7 @@ class DQNAgent():
 
         self.optimizer.step()
 
-        return loss.detach().numpy()        
+        return loss.cpu().detach().numpy()        
 
     def select_action(self, state, time, current_episode, eps_decay=200., initial_eps=0.99, 
         end_eps=0.2):
