@@ -60,12 +60,12 @@ class DQNAgent():
         non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                           batch.next_state)), device=self.device, dtype=torch.bool)
 
-        non_final_next_states = torch.cat([transform(np.array(s)).to(self.device).unsqueeze(0) for s in batch.next_state
-                                                    if s is not None], 0).type(torch.FloatTensor)
+        non_final_next_states = torch.cat([transform(np.array(s)).type(torch.FloatTensor).to(self.device).unsqueeze(0) for s in batch.next_state
+                                                    if s is not None], 0)
 
         # Here we extract the states, actions and rewards from the batch
-        state_batch = torch.cat([transform(np.array(s)).to(self.device).unsqueeze(0) for s in 
-            batch.state], 0).type(torch.FloatTensor)
+        state_batch = torch.cat([transform(np.array(s)).type(torch.FloatTensor).to(self.device).unsqueeze(0) for s in 
+            batch.state], 0)
         action_batch = torch.tensor(batch.action, device=self.device).unsqueeze(0)
         reward_batch = torch.tensor(batch.reward, device=self.device).unsqueeze(0)
         time_batch = torch.tensor(batch.time, device=self.device)
