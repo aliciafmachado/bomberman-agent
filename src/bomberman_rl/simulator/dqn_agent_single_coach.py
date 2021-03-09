@@ -9,9 +9,9 @@ from bomberman_rl.agent.dqn_agent import DQNAgent
 from bomberman_rl.memory.replay_memory import ReplayMemory, Simulation
 
 
-class DQLAgentSingleCoach(BaseSimulator):
+class DQNAgentSingleCoach(BaseSimulator):
     """
-    Teaches a single DQLAgent to play alone
+    Teaches a single DQNAgent to play alone
     """
 
     def __init__(self, env: gym.Env, agent: DQNAgent, n_episodes=10000, display='human',
