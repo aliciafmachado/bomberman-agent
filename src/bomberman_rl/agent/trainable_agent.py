@@ -14,11 +14,12 @@ class TrainableAgent(Agent, ABC):
     def __init__(self):
         super().__init__()
 
-    def switch_mode(self, *args):
+    def switch_mode(self, mode):
         """
         Switches the agent mode to train
         """
-        raise NotImplementedError
+        if mode not in TrainableAgent.AVAILABLE_MODES:
+            raise ValueError
 
     @classmethod
     def load(cls, path, name):

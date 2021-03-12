@@ -115,8 +115,7 @@ class QAgent(TrainableAgent):
         self.__timer = 0
 
     def switch_mode(self, mode):
-        if mode not in QAgent.AVAILABLE_MODES:
-            raise ValueError
+        super().switch_mode(mode)
         self.__mode = mode
 
     def get_q_table_size(self):
