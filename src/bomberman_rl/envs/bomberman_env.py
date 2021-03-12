@@ -1,5 +1,6 @@
 import gym
 import numpy as np
+import torch
 from typing import Optional, Tuple, Dict, Union, List
 from nptyping import NDArray
 
@@ -69,6 +70,8 @@ class BombermanEnv(gym.Env):
         :return: observation(s), reward(s), done and info
         """
         if self.n_agents == 1:
+            if isinstance(action, torch.Tensor):
+                action = int(action)
             assert np.issubdtype(type(action), int)
             action = [action]
         else:
@@ -138,14 +141,14 @@ class BombermanEnv(gym.Env):
             self.game_objects['breaking_blocks'][i] for i in breaking_blocks_idx_to_keep]
 
         # Update characters
-        done = 0
+        n_dead = 0
         rewards = [0 for _ in range(self.n_agents)]
         for agent_idx in range(self.n_agents):
             agent = self.game_objects['characters'][agent_idx]
             alive, reward = agent.update(action[agent_idx], self.map,
                                          self.character_layers[:, :, agent_idx])
             rewards[agent_idx] += reward
-            done += 0 if alive else 1
+            n_dead += 0 if alive else 1
 
             if agent.just_died() and self.n_agents > 1:
                 # Give reward to correct agent
@@ -155,8 +158,11 @@ class BombermanEnv(gym.Env):
                             rewards[fire.get_owner().get_idx()] += Character.kill_reward
 
         # Adjust for single agent
-        done = (self.n_agents > 1 and done >= self.n_agents - 1) or \
-               (self.n_agents == 1 and done > 0)
+        if self.n_agents > 1:
+            done = n_dead >= self.n_agents - 1
+        else:
+            done = n_dead > 0 or not np.any(self.map[:, :, BLOCK])
+
         rewards = rewards[0] if self.n_agents == 1 else rewards
 
         return self.__build_observation(), rewards, done, {}

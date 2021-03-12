@@ -1,8 +1,4 @@
-import numpy as np
-import time
 from .base_simulator import BaseSimulator
-
-from bomberman_rl.envs.conventions import BLOCK
 
 
 class QAgentSingleCoach(BaseSimulator):
@@ -10,7 +6,7 @@ class QAgentSingleCoach(BaseSimulator):
     Teaches a single QAgent to play alone
     """
 
-    def __init__(self, env_name, agent,
+    def __init__(self, env, agent,
                  display="none",
                  lr=0.2,
                  gamma=0.95,
@@ -20,7 +16,7 @@ class QAgentSingleCoach(BaseSimulator):
                  nb_passes=10000,
                  fps=10):
         """
-        :param env_name: The name of the environment to be used
+        :param env: The environment to be used
         :param agent: The agent to be trained
         :param display: if you wish to show the result of the training
         :param lr: learning rate
@@ -31,7 +27,7 @@ class QAgentSingleCoach(BaseSimulator):
         :param nb_passes: the total number of game simulations to be run
         :param fps: if display is not none the fps of teh simulation to be shown
         """
-        super().__init__(env_name, display)
+        super().__init__(env, display)
 
         # Initialize internal variables
         assert 0 <= lr <= 1 and 0 <= gamma <= 1 and 0 <= exploration_factor <= 1
@@ -77,7 +73,7 @@ class QAgentSingleCoach(BaseSimulator):
 
         for i in range(self.__max_steps):
             # Check if it's already over
-            if not np.any(observation[:, :, BLOCK]) or self.__done:
+            if self.__done:
                 self.__render(display, "End of game")
                 # print(self.__agent.get_q_table_size())
                 return
@@ -99,7 +95,6 @@ class QAgentSingleCoach(BaseSimulator):
     def __render(self, display, info):
         # TODO mode this method to renderer
         if display is not "none":
-            pass
-            # print('\033c')
-            # print(info)
-            # self._env.render(mode=display, steps_per_sec=self.__fps)
+            print('\033c')
+            print(info)
+            self._env.render(mode=display, steps_per_sec=self.__fps)
