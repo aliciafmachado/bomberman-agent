@@ -27,4 +27,4 @@ class Policy(nn.Module):
         x = self.__hidden1(x)
         x = F.relu(x)
         x = self.__out(x)
-        return F.softmax(x)
+        return F.softmax(x, dim=0)

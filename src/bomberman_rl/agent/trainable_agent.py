@@ -13,7 +13,6 @@ class TrainableAgent(Agent, ABC):
 
     def __init__(self):
         super().__init__()
-        pass
 
     def switch_mode(self, *args):
         """
