@@ -16,6 +16,8 @@ setup(name='bomberman_rl',
                 'pygame>=2.0.0',
                 'numpy>=1.19',
                 'torch',
+                'torchvision',
+                'torch',
                 'torchvision'
             ],
       setup_requires=['pytest-runner'],

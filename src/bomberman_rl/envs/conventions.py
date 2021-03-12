@@ -5,6 +5,7 @@ RIGHT = 2
 UP = 3
 DOWN = 4
 PLACE_BOMB = 5
+N_ACTIONS = 6
 
 # World matrix's layers indices
 FIXED_BLOCK = 0
