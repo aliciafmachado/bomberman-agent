@@ -110,12 +110,21 @@ class CartpoleDQNAgent(TrainableAgent):
 
         return loss.cpu().detach().numpy()
 
-    def choose_action(self, state: torch.Tensor):
-        with torch.no_grad():
-            state = state.to(self.device)
-            self.q_net.eval()
-            chosen_action = self.q_net(state).max(1)[1]
-            chosen_action = chosen_action.cpu().detach()
+    def choose_action(self, state: torch.Tensor, current_episode: int, eps_decay: int,
+                      initial_eps: float = 0.99, end_eps: float = 0.2):
+        eps_threshold = initial_eps + (end_eps - initial_eps) * min(
+            1., float(current_episode) / eps_decay)
+
+        if self.mode == 'eval' or random.random() > eps_threshold:
+            with torch.no_grad():
+                state = state.to(self.device)
+                self.q_net.eval()
+                chosen_action = self.q_net(state).max(1)[1].view(1, 1)
+                chosen_action = chosen_action.cpu().detach()
+        else:
+            # We take a random action
+            chosen_action = torch.tensor([[random.randrange(self.n_actions)]],
+                                         dtype=torch.long)
 
         return chosen_action
 
@@ -128,13 +137,16 @@ class CartpoleDQNAgent(TrainableAgent):
 
 class CartpoleDQNAgentSingleCoach(BaseSimulator):
     def __init__(self, env: gym.Env, agent: CartpoleDQNAgent, n_episodes=10000,
-                 display='human', batch_size=32, max_steps=50, show_each=1000, fps=10,
+                 display='human', batch_size=32, exploration_init=0.99,
+                 exploration_end=0.2, max_steps=50, show_each=1000, fps=10,
                  plot_loss=False):
         super().__init__(env, display)
 
         # Initialize internal variables
         self.__agent = agent
         self.__batch_size = batch_size
+        self.__exploration_init = exploration_init
+        self.__exploration_end = exploration_end
         self.__max_steps = max_steps
         self.__show_each = show_each
         self.__n_episodes = n_episodes
@@ -180,7 +192,9 @@ class CartpoleDQNAgentSingleCoach(BaseSimulator):
                 self.__render(display, 'End of episode')
                 return
 
-            action = self.__agent.choose_action(observation)
+            action = self.__agent.choose_action(observation, idx, self.__n_episodes,
+                                                initial_eps=self.__exploration_init,
+                                                end_eps=self.__exploration_end)
 
             # Perform last action
             next_observation, reward, done, _ = self._env.step(int(action))
