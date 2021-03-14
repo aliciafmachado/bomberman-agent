@@ -16,7 +16,8 @@ class DQNAgentSingleCoach(BaseSimulator):
 
     def __init__(self, env: gym.Env, agent: DQNAgent, n_episodes=10000, display='human',
                  batch_size=32, exploration_init=0.99, exploration_end=0.2,
-                 max_steps=50, show_each=1000, fps=10, plot_loss=False):
+                 exploration_decay=1000, max_steps=50, show_each=1000, fps=10,
+                 plot_loss=False):
         super().__init__(env, display)
 
         # Initialize internal variables
@@ -25,6 +26,7 @@ class DQNAgentSingleCoach(BaseSimulator):
         self.__batch_size = batch_size
         self.__exploration_init = exploration_init
         self.__exploration_end = exploration_end
+        self.__exploration_decay = exploration_decay
         self.__max_steps = max_steps
         self.__show_each = show_each
         self.__n_episodes = n_episodes
@@ -79,9 +81,10 @@ class DQNAgentSingleCoach(BaseSimulator):
             # Check if it's already over
             if done:
                 self.__render(display, 'End of episode')
-                return
+                break
 
-            action = self.__agent.choose_action(observation, idx, self.__n_episodes,
+            action = self.__agent.choose_action(observation, idx,
+                                                eps_decay=self.__exploration_decay,
                                                 initial_eps=self.__exploration_init,
                                                 end_eps=self.__exploration_end)
             next_time = self.__agent.time
@@ -112,8 +115,6 @@ class DQNAgentSingleCoach(BaseSimulator):
 
             # Render
             self.__render(display, (idx, i, float(reward)))
-
-        self.__render(display, 'End of episode')
 
         # Update or not the targetNet
         if (idx + 1) % self.__target_update == 0:

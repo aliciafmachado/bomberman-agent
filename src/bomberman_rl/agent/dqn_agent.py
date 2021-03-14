@@ -63,8 +63,8 @@ class DQNAgent(TrainableAgent):
         # Here we extract the states, actions and rewards from the batch
         state_batch = torch.cat([s.to(self.device) for s in batch.state], dim=0)
 
-        action_batch = torch.tensor(batch.action, device=self.device).unsqueeze(0)
-        reward_batch = torch.tensor(batch.reward, device=self.device).unsqueeze(0)
+        action_batch = torch.tensor(batch.action, device=self.device).unsqueeze(1)
+        reward_batch = torch.tensor(batch.reward, device=self.device)
         time_batch = torch.tensor(batch.time, device=self.device)
         next_time_batch = torch.tensor(batch.next_time, device=self.device)
 
@@ -91,7 +91,7 @@ class DQNAgent(TrainableAgent):
         expected_state_action_values = (next_state_values * self.gamma) + reward_batch
 
         # Compute huber loss
-        loss = self.loss_fn(state_action_values, expected_state_action_values)
+        loss = self.loss_fn(state_action_values, expected_state_action_values.unsqueeze(1))
 
         # Optimize the model
         self.optimizer.zero_grad()

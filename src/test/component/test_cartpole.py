@@ -2,7 +2,6 @@ from collections import namedtuple
 import gym
 import matplotlib.pyplot as plt
 import numpy as np
-from time import sleep
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -44,15 +43,13 @@ class CartpoleDQNModel(nn.Module):
 
         hidden_dim = 50
         self.linear = nn.Linear(4, hidden_dim)
-        self.linear2 = nn.Linear(hidden_dim, hidden_dim * 2)
-        self.linear3 = nn.Linear(hidden_dim * 2, n_actions)
+        self.linear2 = nn.Linear(hidden_dim, n_actions)
 
         self.to(device)
 
     def forward(self, x):
         x = F.relu(self.linear(x))
-        x = F.relu(self.linear2(x))
-        return self.linear3(x)
+        return self.linear2(x)
 
 
 class CartpoleDQNAgent(TrainableAgent):
@@ -70,9 +67,9 @@ class CartpoleDQNAgent(TrainableAgent):
 
         # We user huber loss
         self.loss_fn = torch.nn.SmoothL1Loss()
-        self.optimizer = optim.Adam(self.q_net.parameters(), lr)
+        self.optimizer = optim.RMSprop(self.q_net.parameters())
 
-        self.clip_val = True
+        self.clip_val = False
 
     def train(self, batch, batch_size):
         # Compute non-final states and concatenate the batch elements
@@ -86,8 +83,8 @@ class CartpoleDQNAgent(TrainableAgent):
         # Here we extract the states, actions and rewards from the batch
         state_batch = torch.cat([s.to(self.device) for s in batch.state], dim=0)
 
-        action_batch = torch.tensor(batch.action, device=self.device).unsqueeze(0)
-        reward_batch = torch.tensor(batch.reward, device=self.device).unsqueeze(0)
+        action_batch = torch.tensor(batch.action, device=self.device).unsqueeze(1)
+        reward_batch = torch.tensor(batch.reward, device=self.device)
 
         self.q_net.train()
         state_action_values = self.q_net(state_batch).gather(1, action_batch)
@@ -98,7 +95,7 @@ class CartpoleDQNAgent(TrainableAgent):
 
         expected_state_action_values = (next_state_values * self.gamma) + reward_batch
 
-        loss = self.loss_fn(state_action_values, expected_state_action_values)
+        loss = self.loss_fn(state_action_values, expected_state_action_values.unsqueeze(1))
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -136,9 +133,10 @@ class CartpoleDQNAgent(TrainableAgent):
 
 
 class CartpoleDQNAgentSingleCoach(BaseSimulator):
-    def __init__(self, env: gym.Env, agent: CartpoleDQNAgent, n_episodes=10000,
+    def __init__(self, env: gym.Env, agent: CartpoleDQNAgent, n_episodes=1000,
                  display='human', batch_size=32, exploration_init=0.99,
-                 exploration_end=0.2, max_steps=50, show_each=1000, fps=10,
+                 exploration_end=0.2, exploration_decay=500,
+                 max_steps=50, show_each=1000, fps=10,
                  plot_loss=False):
         super().__init__(env, display)
 
@@ -147,6 +145,7 @@ class CartpoleDQNAgentSingleCoach(BaseSimulator):
         self.__batch_size = batch_size
         self.__exploration_init = exploration_init
         self.__exploration_end = exploration_end
+        self.__exploration_decay = exploration_decay
         self.__max_steps = max_steps
         self.__show_each = show_each
         self.__n_episodes = n_episodes
@@ -179,8 +178,8 @@ class CartpoleDQNAgentSingleCoach(BaseSimulator):
             self.__run_single_simulation(self._display, i)
 
     def __run_single_simulation(self, display, idx, verbose=False):
-        observation = self._env.reset()
-        observation = torch.tensor(observation).unsqueeze(0).float()
+        observation = torch.tensor([self._env.reset()],
+                                   device=self.__agent.device).float()
         self.__agent.reset()
         self.__render(display, None)
 
@@ -190,15 +189,21 @@ class CartpoleDQNAgentSingleCoach(BaseSimulator):
             # Check if it's already over
             if done:
                 self.__render(display, 'End of episode')
-                return
+                break
 
-            action = self.__agent.choose_action(observation, idx, self.__n_episodes,
+            action = self.__agent.choose_action(observation, idx,
+                                                eps_decay=self.__exploration_decay,
                                                 initial_eps=self.__exploration_init,
                                                 end_eps=self.__exploration_end)
 
             # Perform last action
-            next_observation, reward, done, _ = self._env.step(int(action))
-            next_observation = torch.tensor(next_observation).unsqueeze(0).float()
+            next_observation, reward, done, _ = self._env.step(action.item())
+            reward = torch.tensor([reward], device=self.__agent.device)
+
+            if done:
+                next_observation = None
+            else:
+                next_observation = torch.tensor([next_observation], device=self.__agent.device).float()
 
             # Store the transition in memory
             self.__memory.push(observation, action, next_observation, reward)
@@ -221,11 +226,6 @@ class CartpoleDQNAgentSingleCoach(BaseSimulator):
             # Render
             self.__render(display, (idx, i, float(reward)))
 
-            if display == 'human':
-                sleep(1 / self.__fps)
-
-        self.__render(display, 'End of episode')
-
         # Update or not the targetNet
         if (idx + 1) % self.__target_update == 0:
             self.__agent.target_net.train()
@@ -246,10 +246,14 @@ class CartpoleDQNAgentSingleCoach(BaseSimulator):
 
 
 if __name__ == '__main__':
-    env = gym.make('CartPole-v1')
-    agent = CartpoleDQNAgent(n_actions=2, lr=1e-3, gamma=0.9)
-    coach = CartpoleDQNAgentSingleCoach(env, agent, n_episodes=500, max_steps=100,
-                                        show_each=100, plot_loss=True)
+    env = gym.make('CartPole-v0').unwrapped
+    env.reset()
+
+    agent = CartpoleDQNAgent(n_actions=2, lr=1e-3, gamma=0.999)
+    coach = CartpoleDQNAgentSingleCoach(env, agent, n_episodes=500, max_steps=1000,
+                                        exploration_init=0.9, exploration_end=0.05,
+                                        exploration_decay=20, show_each=50,
+                                        batch_size=128, plot_loss=True)
     coach.run()
 
     agent.save('./', 'dql_agent')
