@@ -37,7 +37,8 @@ class BreakingBlock(GameObject):
         # Get correct animation sprite
         sprite_name = 'block_destroyed'
         sprite_name += str(self.__animation_list[self.__animation_idx])  # Animation frame
-        self.__animation_idx += 1
+        self.__animation_idx = min(self.__animation_idx + 1,
+                                   len(self.__animation_list) - 1)
 
         # Draw sprite
         display.blit(sprites_factory[sprite_name], (self._pos[1] * BLOCK_SIZE,
