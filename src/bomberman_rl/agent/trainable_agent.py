@@ -13,6 +13,7 @@ class TrainableAgent(Agent, ABC):
 
     def __init__(self):
         super().__init__()
+        self._mode = "eval"
 
     def switch_mode(self, mode):
         """
@@ -20,6 +21,7 @@ class TrainableAgent(Agent, ABC):
         """
         if mode not in TrainableAgent.AVAILABLE_MODES:
             raise ValueError
+        self._mode = mode
 
     @classmethod
     def load(cls, path, name):

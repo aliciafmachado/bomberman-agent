@@ -116,7 +116,6 @@ class QAgent(TrainableAgent):
 
     def switch_mode(self, mode):
         super().switch_mode(mode)
-        self.__mode = mode
 
     def get_q_table_size(self):
         return len(self.__q_table)
