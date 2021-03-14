@@ -25,7 +25,8 @@ class Character(GameObject):
                 UP: np.array([-1, 0], dtype=np.int8)}
     bomb_limit = 1
     alive_reward = 0
-    block_break_reward = 100
+    block_break_reward = 5
+    bomb_reward = 1
     dead_reward = -10
     kill_reward = 1000
 
@@ -46,6 +47,7 @@ class Character(GameObject):
         self.__block_break_cumulative_reward = 0
         self.__animation_idx_death = 0
         self.__placed_bombs = 0
+        self.__bomb_reward = 0
 
     def update(self, action: int, world: NDArray[bool], world_layer: NDArray[bool]) -> \
             Tuple[bool, int]:
@@ -155,6 +157,7 @@ class Character(GameObject):
 
     def place_bomb(self):
         self.__placed_bombs += 1
+        self.__bomb_reward = Character.bomb_reward
 
     def bomb_exploded(self):
         self.__placed_bombs -= 1
@@ -167,6 +170,7 @@ class Character(GameObject):
             self.__block_break_cumulative_reward = 0
             return Character.dead_reward
         else:
-            block_reward = self.__block_break_cumulative_reward
+            reward = self.__block_break_cumulative_reward + self.__bomb_reward
             self.__block_break_cumulative_reward = 0
-            return Character.alive_reward + block_reward
+            self.__bomb_reward = 0
+            return Character.alive_reward + reward
