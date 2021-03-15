@@ -25,16 +25,17 @@ class DQNAgent(TrainableAgent):
         @param lr: learning rate
         """
         super().__init__()
+        self.mode = None
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         # Temporary variable
-        self.time = 0
-        self.max_time = 9
-        self.mode = None
+        self.time_size = 10
+        self.time = torch.tensor([0], device=self.device)
+        self.max_time = torch.tensor([self.time_size - 1], device=self.device)
 
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.target_net = DQNModel(height, width, n_dim=n_dim,
-                                   time_size=self.max_time + 1, device=self.device)
-        self.q_net = DQNModel(height, width, n_dim=n_dim, time_size=self.max_time + 1,
+                                   time_size=self.time_size, device=self.device)
+        self.q_net = DQNModel(height, width, n_dim=n_dim, time_size=self.time_size,
                               device=self.device)
         self.n_actions = n_actions
         self.gamma = gamma
@@ -52,48 +53,32 @@ class DQNAgent(TrainableAgent):
         @return mean loss for the batch
         """
 
-        # Compute non-final states and concatenate the batch elements
-        # we need to do it in order to pass to the target network
+        # Compute non-final states
         non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                                 batch.next_state)),
                                       device=self.device, dtype=torch.bool)
         non_final_next_states = torch.cat(
-            [s.to(self.device) for s in batch.next_state if s is not None], dim=0)
+            [s for s in batch.next_state if s is not None])
 
-        # Here we extract the states, actions and rewards from the batch
-        state_batch = torch.cat([s.to(self.device) for s in batch.state], dim=0)
+        # Extract batch
+        state_batch = torch.cat(batch.state)
+        action_batch = torch.cat(batch.action)
+        reward_batch = torch.cat(batch.reward)
+        time_batch = torch.cat(batch.time)
+        next_time_batch = torch.cat(batch.next_time)
 
-        action_batch = torch.tensor(batch.action, device=self.device).unsqueeze(1)
-        reward_batch = torch.tensor(batch.reward, device=self.device)
-        time_batch = torch.tensor(batch.time, device=self.device)
-        next_time_batch = torch.tensor(batch.next_time, device=self.device)
-
-        # First we calculate the Q(s_t, a) for the actions taken
-        # so that we get the value that we would get from the state-action
-        # in the batch
         self.q_net.train()
         state_action_values = self.q_net(state_batch, time_batch).gather(1, action_batch)
 
-        # We compute the values for all next states using the target net
-        # and then we use the bellman
-        # equation formulation to find the expected state action values of 
-        # the current state
-        # We initialize the values and use the previous mask so that
-        # the final states get state value equal 0 and the other ones that are
-        # not final get their correct values
         next_state_values = torch.zeros(batch_size, device=self.device)
-
-        # We decrease the timer for the next state
         next_state_values[non_final_mask] = \
             self.target_net(non_final_next_states, next_time_batch).max(1)[0].detach()
 
-        # Compute the expected Q values
-        expected_state_action_values = (next_state_values * self.gamma) + reward_batch
+        # Compute expected Q values
+        expected_state_action_values = next_state_values * self.gamma + reward_batch
 
-        # Compute huber loss
-        loss = self.loss_fn(state_action_values, expected_state_action_values.unsqueeze(1))
-
-        # Optimize the model
+        loss = self.loss_fn(state_action_values,
+                            expected_state_action_values.unsqueeze(1))
         self.optimizer.zero_grad()
         loss.backward()
 
@@ -118,30 +103,22 @@ class DQNAgent(TrainableAgent):
         @param eps_decay: how we calculate the fraction
         """
 
-        # We get the current threshold to choose an action randomly
-        # or to choose an action from the network
+        # Linear decay
         eps_threshold = initial_eps + (end_eps - initial_eps) * min(
             1., float(current_episode) / eps_decay)
 
         if self.mode == 'eval' or random.random() > eps_threshold:
             with torch.no_grad():
-                state = state.to(self.device)
-                time = torch.tensor([self.time], device=self.device)
-
-                # We get the action that have the greatest value among
-                # all the ones calculated by the neural network
                 self.q_net.eval()
-                chosen_action = self.q_net(state, time).max(1)[1].view(1, 1)
-                chosen_action = chosen_action.cpu().detach()
+                chosen_action = self.q_net(state, self.time).max(1)[1].view(1, 1)
         else:
-            # We take a random action
             chosen_action = torch.tensor([[random.randrange(self.n_actions)]],
-                                         dtype=torch.long)
+                                         dtype=torch.long, device=self.device)
 
         if chosen_action == PLACE_BOMB:
             self.time = self.max_time
         else:
-            self.time = max(self.time - 1, 0)
+            self.time = torch.clamp(self.time - 1, 0, self.time_size - 1)
 
         return chosen_action
 
@@ -149,4 +126,4 @@ class DQNAgent(TrainableAgent):
         self.mode = mode
 
     def reset(self):
-        self.time = 0
+        self.time = torch.tensor([0], device=self.device)

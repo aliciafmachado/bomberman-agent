@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torchvision.transforms as transforms
 
-from .base_simulator import BaseSimulator
+from bomberman_rl.simulator.base_simulator import BaseSimulator
 from bomberman_rl.agent.dqn_agent import DQNAgent
 from bomberman_rl.memory.replay_memory import ReplayMemory, Simulation
 
@@ -69,13 +69,14 @@ class DQNAgentSingleCoach(BaseSimulator):
         :param display: The kind of display to show intermediary this simulation
         """
 
+        device = self.__agent.device
         observation = self._env.reset()
-        observation = self.__transform(observation).unsqueeze(0).float()
+        observation = self.__transform(observation).unsqueeze(0).float().to(device)
         self.__agent.reset()
         self.__render(display, None)
 
         done = False
-        time = torch.tensor([0])
+        time = torch.tensor([0], device=device)
 
         for i in range(self.__max_steps):
             # Check if it's already over
@@ -90,8 +91,10 @@ class DQNAgentSingleCoach(BaseSimulator):
             next_time = self.__agent.time
 
             # Perform last action
-            next_observation, reward, done, _ = self._env.step(action)
-            next_observation = self.__transform(next_observation).unsqueeze(0).float()
+            next_observation, reward, done, _ = self._env.step(action.item())
+            next_observation = self.__transform(next_observation).unsqueeze(0).float().to(
+                device)
+            reward = torch.tensor([reward], device=device)
 
             # Store the transition in memory
             self.__memory.push(observation, action, next_observation, reward, time,
