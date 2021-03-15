@@ -16,11 +16,9 @@ class DQNAgent(TrainableAgent):
     https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
     """
 
-    def __init__(self, height, width, n_dim=5, n_actions=6, lr=1e-3, gamma=0.9):
+    def __init__(self, observation_shape, n_actions, lr=1e-3, gamma=0.9):
         """
-        @param height: height of the environment frame
-        @param width: width of the environment frame
-        @param n_dim: Number of frames for each state
+        @param observation_shape: shape the environment frame
         @param n_actions: Number of possible actions
         @param lr: learning rate
         """
@@ -33,9 +31,9 @@ class DQNAgent(TrainableAgent):
         self.time = torch.tensor([0], device=self.device)
         self.max_time = torch.tensor([self.time_size - 1], device=self.device)
 
-        self.target_net = DQNModel(height, width, n_dim=n_dim,
-                                   time_size=self.time_size, device=self.device)
-        self.q_net = DQNModel(height, width, n_dim=n_dim, time_size=self.time_size,
+        self.target_net = DQNModel(observation_shape, n_actions, time_size=self.time_size,
+                                   device=self.device)
+        self.q_net = DQNModel(observation_shape, n_actions, time_size=self.time_size,
                               device=self.device)
         self.n_actions = n_actions
         self.gamma = gamma

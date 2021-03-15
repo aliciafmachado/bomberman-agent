@@ -19,9 +19,9 @@ class BombermanEnv(gym.Env):
     Possible actions: stop(0), left (1), right (2), up (3), down (4), place bomb (5)
     Map 3D Matrix: map[:, :, 0] = fixed blocks position (1)
                    map[:, :, 1] = normal blocks position         (S)
-                   map[:, :, 2] = character position             (P)
-                   map[:, :, 3] = bomb position                  (B)
-                   map[:, :, 4] = fire position                  (F)
+                   map[:, :, 2] = bomb position                  (B)
+                   map[:, :, 3] = fire position                  (F)
+                   map[:, :, 4] = character position             (P)
     """
 
     metadata = {
@@ -29,12 +29,15 @@ class BombermanEnv(gym.Env):
         'available_board_sizes': [(11, 13), (5, 7), (5, 5)]
     }
 
-    def __init__(self, size: Optional[Tuple[int, int]] = (11, 13), n_agents: int = 1,
-                 custom_map: Optional[str] = None, random_seed: int = 42):
+    def __init__(self, size: Optional[Tuple[int, int]] = (11, 13), centralized=False,
+                 n_agents: int = 1, custom_map: Optional[str] = None,
+                 random_seed: int = 42):
         """
         Environment constructor
         Args:
             size: optional map size, it will be ignored if a custom_map is given
+            centralized: if the output matrix should be centralized in the player, or
+                return an extra character layer with its position.
             n_agents: number of bombermans in the game.
             custom_map: if given a path, it will load a custom map from a txt
             random_seed: numpy random seed for reproducibility
@@ -42,6 +45,7 @@ class BombermanEnv(gym.Env):
         assert 1 <= n_agents <= 4
 
         self.custom_map = custom_map
+        self.centrilized = centralized
         self.n_agents = n_agents
         self.bomb_duration = 6
         self.fire_duration = 4
@@ -62,6 +66,16 @@ class BombermanEnv(gym.Env):
 
         self.game_objects, self.character_layers = self.__init_game_objects()
         self.renderer = Renderer(self.map, self.character_layers, self.game_objects)
+
+        # Define action and observation space
+        self.action_space = gym.spaces.Discrete(6)
+        if centralized and n_agents == 1:
+            shape = (size[0], size[1], 4)
+        elif (centralized and n_agents > 1) or (not centralized and n_agents == 1):
+            shape = (size[0], size[1], 5)
+        else:
+            shape = (size[0], size[1], 6)
+        self.observation_space = gym.spaces.Box(0, 1, shape, np.bool)
 
     def step(self, action: Union[int, List[int]]) -> \
             Tuple[Union[NDArray, List[NDArray]], Union[float, List[float]], bool, Dict]:

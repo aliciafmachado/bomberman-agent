@@ -15,16 +15,15 @@ class DQNModel(nn.Module):
     https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
     """
 
-    def __init__(self, height, width, n_dim, device, time_size, n_actions=6):
+    def __init__(self, observation_shape, n_actions, device, time_size):
         """
-        @param height: height of the environment frame
-        @param width: width of the environment frame
-        @param n_dim: Number of frames for each state
+        @param observation_shape: shape of the environment frame
         @param n_actions: Number of possible actions
+        @param device: cuda or cpu device
         """
         super().__init__()
         self.n_actions = n_actions
-        self.conv1 = nn.Conv2d(n_dim, 16, kernel_size=3, stride=1)
+        self.conv1 = nn.Conv2d(observation_shape[2], 16, kernel_size=3, stride=1)
         self.bn1 = nn.BatchNorm2d(16)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=True)
         self.bn2 = nn.BatchNorm2d(32)
@@ -35,7 +34,8 @@ class DQNModel(nn.Module):
         self.device = device
 
         # We calculate the dimensions after the convolutional layers
-        linear_input_size = 64 * conv2d_output(height) * conv2d_output(width)
+        linear_input_size = 64 * conv2d_output(observation_shape[0]) * conv2d_output(
+            observation_shape[1])
         
         # The linear layer that will return the output
         self.time_size = time_size
