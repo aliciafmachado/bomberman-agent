@@ -79,6 +79,7 @@ class DQNAgentSingleCoach(BaseSimulator):
 
         done = False
         time = torch.tensor([0], device=device)
+        cum_reward = 0
 
         for i in range(self.__max_steps):
             # Check if it's already over
@@ -96,6 +97,7 @@ class DQNAgentSingleCoach(BaseSimulator):
             next_observation, reward, done, _ = self._env.step(action.item())
             next_observation = self.__transform(next_observation).unsqueeze(0).float().to(
                 device)
+            cum_reward += reward
             reward = torch.tensor([reward], device=device)
 
             # Store the transition in memory
@@ -105,9 +107,6 @@ class DQNAgentSingleCoach(BaseSimulator):
             # Next state
             observation = next_observation
             time = next_time
-
-            if self.__plot_rewards:
-                self.rewards.append(reward.item())
 
             if len(self.__memory) >= self.__batch_size:
                 sample = self.__memory.sample(self.__batch_size)
@@ -123,6 +122,9 @@ class DQNAgentSingleCoach(BaseSimulator):
 
             # Render
             self.__render(display, (idx, i, float(reward)))
+
+        if self.__plot_rewards:
+            self.rewards.append(cum_reward)
 
         # Update or not the targetNet
         if (idx + 1) % self.__target_update == 0:
@@ -144,6 +146,6 @@ class DQNAgentSingleCoach(BaseSimulator):
 
     def plot_rewards(self):
         plt.figure()
-        running_mean = np.convolve(self.rewards, np.ones(150) / 150, mode="valid")
+        running_mean = np.convolve(self.rewards, np.ones(10) / 10, mode="valid")
         plt.plot(np.arange(len(running_mean)), running_mean)
         plt.savefig('rewards.png')
