@@ -45,7 +45,7 @@ class BombermanEnv(gym.Env):
         assert 1 <= n_agents <= 4
 
         self.custom_map = custom_map
-        self.centrilized = centralized
+        self.centralized = centralized
         self.n_agents = n_agents
         self.bomb_duration = 6
         self.fire_duration = 4
@@ -227,7 +227,8 @@ class BombermanEnv(gym.Env):
             'characters': [],
             'breaking_blocks': []
         }
-        character_layers = np.zeros((self.size[0], self.size[1], self.n_agents))
+        character_layers = np.zeros((self.size[0], self.size[1], self.n_agents),
+                                    dtype=bool)
         for i in range(self.n_agents):
             game_objects['characters'].append(Character(initial_pos[i], i))
             character_layers[initial_pos[i][0], initial_pos[i][1], i] = 1
@@ -235,20 +236,45 @@ class BombermanEnv(gym.Env):
         return game_objects, character_layers
 
     def __build_observation(self):
+        def centralize(matrix, pos):
+            i0 = max(0, pos[0] - matrix.shape[0] // 2)
+            j0 = max(0, pos[1] - matrix.shape[1] // 2)
+            i1 = min(pos[0] + matrix.shape[0] // 2 + 1, matrix.shape[0])
+            j1 = min(pos[1] + matrix.shape[1] // 2 + 1, matrix.shape[1])
+            new_i0 = max(0, matrix.shape[0] // 2 - pos[0])
+            new_j0 = max(0, matrix.shape[1] // 2 - pos[1])
+            new_i1 = new_i0 + (i1 - i0)
+            new_j1 = new_j0 + (j1 - j0)
+
+            new_matrix = np.zeros_like(matrix, dtype=bool)
+            new_matrix[new_i0:new_i1, new_j0:new_j1, :] = matrix[i0:i1, j0:j1, :]
+            return new_matrix
+
         if self.n_agents > 1:
             obs = []
             for i in range(self.n_agents):
-                st = np.stack((self.character_layers[:, :, i],
-                              np.any(self.character_layers[
-                                     :, :, np.arange(self.n_agents) != i], axis=2)),
-                              axis=2)
-                obs.append(np.concatenate((self.map, st), axis=2))
+                character_layer = self.character_layers[:, :, i]
+                enemies_layer = np.any(self.character_layers[
+                                       :, :, np.arange(self.n_agents) != i], axis=2)
+
+                if self.centralized:
+                    matrix = np.append(self.map, np.expand_dims(enemies_layer, axis=2),
+                                       axis=2)
+                    pos = self.game_objects['characters'][i].get_pos()
+                    obs.append(centralize(matrix, pos))
+                else:
+                    st = np.stack((character_layer, enemies_layer), axis=2)
+                    obs.append(np.concatenate((self.map, st), axis=2))
 
             return obs
         else:
-            return np.append(self.map,
-                             np.expand_dims(self.character_layers[:, :, 0], axis=2),
-                             axis=2)
+            if self.centralized:
+                pos = self.game_objects['characters'][0].get_pos()
+                return centralize(self.map, pos)
+            else:
+                return np.append(self.map,
+                                 np.expand_dims(self.character_layers[:, :, 0], axis=2),
+                                 axis=2)
 
     def __create_map_from_file(self, custom_map: str) -> NDArray[bool]:
         # open file
@@ -259,7 +285,7 @@ class BombermanEnv(gym.Env):
             prov_map.append(l)
         f.close()
         m, n = len(prov_map), len(prov_map[0])
-        map = np.zeros((m, n, 4))
+        map = np.zeros((m, n, 4), dtype=bool)
         for i in range(m):
             for j in range(n):
                 value = prov_map[i][j]
@@ -271,7 +297,7 @@ class BombermanEnv(gym.Env):
 
     def __create_map_from_scratch(self) -> NDArray[bool]:
         m, n = self.size
-        map = np.zeros((m, n, 4))
+        map = np.zeros((m, n, 4), dtype=bool)
 
         # Walls
         map[0, :, FIXED_BLOCK] = 1
@@ -293,7 +319,8 @@ class BombermanEnv(gym.Env):
         if self.n_agents > 2:
             spawn_points = spawn_points.union({(m - 2, 1), (m - 3, 1), (m - 2, 2)})
         if self.n_agents > 3:
-            spawn_points = spawn_points.union({(m - 2, n - 2), (m - 2, n - 3), (m - 3, n - 2)})
+            spawn_points = spawn_points.union(
+                {(m - 2, n - 2), (m - 2, n - 3), (m - 3, n - 2)})
 
         for i in range(1, m - 1):
             for j in range(1, n - 1):
