@@ -17,7 +17,7 @@ class DQNAgentSingleCoach(BaseSimulator):
     def __init__(self, env: gym.Env, agent: DQNAgent, n_episodes=10000, display='human',
                  batch_size=32, exploration_init=0.99, exploration_end=0.2,
                  exploration_decay=1000, max_steps=50, show_each=1000, fps=10,
-                 plot_loss=False):
+                 plot_loss=False, plot_rewards=False):
         super().__init__(env, display)
 
         # Initialize internal variables
@@ -33,7 +33,9 @@ class DQNAgentSingleCoach(BaseSimulator):
         self.__fps = fps
 
         self.__plot_loss = plot_loss
-        self.__losses = []
+        self.losses = []
+        self.__plot_rewards = plot_rewards
+        self.rewards = []
 
         self.__target_update = 10
         self.__transform = transforms.ToTensor()
@@ -104,13 +106,16 @@ class DQNAgentSingleCoach(BaseSimulator):
             observation = next_observation
             time = next_time
 
+            if self.__plot_rewards:
+                self.rewards.append(reward.item())
+
             if len(self.__memory) >= self.__batch_size:
                 sample = self.__memory.sample(self.__batch_size)
                 batch = Simulation(*zip(*sample))
                 loss = self.__agent.train(batch, self.__batch_size)
 
                 if self.__plot_loss:
-                    self.__losses.append(loss)
+                    self.losses.append(loss)
                 if verbose:
                     print('Episode[{}/{}], Loss: {:.4f}, Buffer state[{}/{}], Reward: {}'
                           .format(idx + 1, self.__n_episodes, loss, len(self.__memory),
@@ -131,8 +136,14 @@ class DQNAgentSingleCoach(BaseSimulator):
             print(info)
             self._env.render(mode=display, steps_per_sec=self.__fps)
 
-    def show_loss(self):
+    def plot_loss(self):
         plt.figure()
-        running_mean = np.convolve(self.__losses, np.ones(100) / 100, mode="valid")
+        running_mean = np.convolve(self.losses, np.ones(100) / 100, mode="valid")
         plt.plot(np.arange(len(running_mean)), running_mean)
         plt.savefig('loss.png')
+
+    def plot_rewards(self):
+        plt.figure()
+        running_mean = np.convolve(self.rewards, np.ones(150) / 150, mode="valid")
+        plt.plot(np.arange(len(running_mean)), running_mean)
+        plt.savefig('rewards.png')
