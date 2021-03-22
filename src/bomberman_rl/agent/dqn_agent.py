@@ -80,7 +80,7 @@ class DQNAgent(TrainableAgent):
         # Update memory weights
         state_values = self.target_net(state_batch, time_batch).max(1)[0].detach()
         errors = torch.abs(
-            state_values - expected_state_action_values).data.numpy()
+            state_values - expected_state_action_values).cpu().detach().numpy()
         memory.update_priorities(idxs, errors)
 
         loss = self.loss_fn(state_action_values,
