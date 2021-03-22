@@ -10,6 +10,7 @@ from .game_objects.fire import Fire
 from .game_objects.character import Character
 from .game_objects.breaking_block import BreakingBlock
 from .renderer import Renderer
+from .reward import Reward
 
 
 class BombermanEnv(gym.Env):
@@ -43,7 +44,6 @@ class BombermanEnv(gym.Env):
             random_seed: numpy random seed for reproducibility
         """
         assert 1 <= n_agents <= 4
-
         self.custom_map = custom_map
         self.centralized = centralized
         self.n_agents = n_agents
@@ -64,7 +64,7 @@ class BombermanEnv(gym.Env):
             self.map = self.__create_map_from_scratch()
             self.original_map = np.copy(self.map)
 
-        self.game_objects, self.character_layers = self.__init_game_objects()
+        self.game_objects, self.character_layers, self.rewards = self.__init_game_objects()
         self.renderer = Renderer(self.map, self.character_layers, self.game_objects)
 
         # Define action and observation space
@@ -83,6 +83,11 @@ class BombermanEnv(gym.Env):
         :param action: next movement for the agent(s)
         :return: observation(s), reward(s), done and info
         """
+
+        # reset rewards
+        for r in self.rewards:
+            r.reset_reward()
+
         if self.n_agents == 1:
             if isinstance(action, torch.Tensor):
                 action = int(action)
@@ -106,6 +111,7 @@ class BombermanEnv(gym.Env):
         bomb_pos = {
             tuple(bomb.get_pos()): bomb for bomb in self.game_objects['bombs']
         }
+
         set_all_bombs = set(self.game_objects['bombs'])
         set_remaining_bombs = set()
         while set_all_bombs:
@@ -126,6 +132,12 @@ class BombermanEnv(gym.Env):
                     self.game_objects['breaking_blocks'].append(
                         BreakingBlock(break_block_pos, self.fire_duration)
                     )
+                    # give reward
+                    self.rewards[fire.get_owner().get_idx()].add_broken_block_reward()
+
+                # reward - no broken blocks
+                if len(fire.break_blocks) == 0:
+                    self.rewards[fire.get_owner().get_idx()].add_no_broken_block_reward()
 
                 # Explode bombs in the way
                 for bomb_hit_pos in fire.bombs_hit:
@@ -156,20 +168,20 @@ class BombermanEnv(gym.Env):
 
         # Update characters
         n_dead = 0
-        rewards = [0 for _ in range(self.n_agents)]
         for agent_idx in range(self.n_agents):
             agent = self.game_objects['characters'][agent_idx]
-            alive, reward = agent.update(action[agent_idx], self.map,
-                                         self.character_layers[:, :, agent_idx])
-            rewards[agent_idx] += reward
+            self.rewards[agent_idx].calculate_reward(agent, action[agent_idx], self.map)
+            alive = agent.update(action[agent_idx], self.map,
+                                 self.character_layers[:, :, agent_idx])
             n_dead += 0 if alive else 1
-
             if agent.just_died() and self.n_agents > 1:
                 # Give reward to correct agent
                 for fire in self.game_objects['fires']:
                     if tuple(agent.get_pos()) in fire.get_occupied_tiles():
                         if not fire.get_owner().just_died():
-                            rewards[fire.get_owner().get_idx()] += Character.kill_reward
+                            self.rewards[fire.get_owner().get_idx()].add_kill_reward()
+                            
+        reward_value = [self.rewards[i].getReward() for i in range(self.n_agents)]
 
         # Adjust for single agent
         if self.n_agents > 1:
@@ -177,9 +189,8 @@ class BombermanEnv(gym.Env):
         else:
             done = n_dead > 0 or not np.any(self.map[:, :, BLOCK])
 
-        rewards = rewards[0] if self.n_agents == 1 else rewards
-
-        return self.__build_observation(), rewards, done, {}
+        reward_value = reward_value[0] if self.n_agents == 1 else reward_value
+        return self.__build_observation(), reward_value, done, {}
 
     def reset(self, new_map: bool = False) -> Union[NDArray, List[NDArray]]:
         """
@@ -194,7 +205,7 @@ class BombermanEnv(gym.Env):
         else:
             self.map = np.copy(self.original_map)
 
-        self.game_objects, self.character_layers = self.__init_game_objects()
+        self.game_objects, self.character_layers, self.rewards = self.__init_game_objects()
         self.renderer.reset(self.map, self.character_layers, self.game_objects)
 
         return self.__build_observation()
@@ -233,7 +244,7 @@ class BombermanEnv(gym.Env):
             game_objects['characters'].append(Character(initial_pos[i], i))
             character_layers[initial_pos[i][0], initial_pos[i][1], i] = 1
 
-        return game_objects, character_layers
+        return game_objects, character_layers, [Reward() for i in range(self.n_agents)]
 
     def __build_observation(self):
         def centralize(matrix, pos):

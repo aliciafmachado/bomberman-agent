@@ -2,6 +2,7 @@ from nptyping import NDArray
 import numpy as np
 import os
 
+from bomberman_rl.envs.game_objects.fire import Fire
 from bomberman_rl.envs.conventions import BLOCK, BLOCK_SIZE
 from bomberman_rl.envs.sprites_factory import SpritesFactory
 from bomberman_rl.envs.game_objects.game_object import GameObject

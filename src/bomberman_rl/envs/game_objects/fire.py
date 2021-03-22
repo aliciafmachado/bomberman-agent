@@ -36,7 +36,6 @@ class Fire(GameObject):
         self.__tiles = tile_range
         self.__world = world
         self.__owner = owner
-        self.__reward_given = False
         self.__occupied_tiles, self.break_blocks, self.bombs_hit = \
             self.__get_fire_coordinates()
         # animation assistance
@@ -158,10 +157,5 @@ class Fire(GameObject):
                         coordinates[tuple(fire_pos)] = END_UP if dir == UP else END_DOWN
                     else:
                         coordinates[tuple(fire_pos)] = VERTICAL
-            # Adding reward to player
-            if not self.__reward_given and hit:
-                self.__owner.break_block()
-
-        self.__reward_given = True
 
         return coordinates, blocks_hit, bombs_hit
