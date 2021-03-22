@@ -44,12 +44,14 @@ class DQNAgent(TrainableAgent):
 
         self.clip_val = True
 
-    def train(self, batch, batch_size):
+    def train(self, memory, batch_size):
         """
-        @param batch: sample of the memory
+        @param memory: Prioritized memory
         @param batch_size: size of the batch
         @return mean loss for the batch
         """
+
+        batch, idxs, _ = memory.sample(batch_size)
 
         # Compute non-final states
         non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
@@ -74,6 +76,12 @@ class DQNAgent(TrainableAgent):
 
         # Compute expected Q values
         expected_state_action_values = next_state_values * self.gamma + reward_batch
+
+        # Update memory weights
+        state_values = self.target_net(state_batch, time_batch).max(1)[0].detach()
+        errors = torch.abs(
+            state_values - expected_state_action_values).data.numpy()
+        memory.update_priorities(idxs, errors)
 
         loss = self.loss_fn(state_action_values,
                             expected_state_action_values.unsqueeze(1))
