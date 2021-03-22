@@ -18,7 +18,7 @@ class DQNAgent(TrainableAgent):
     """
 
     def __init__(self, observation_shape, n_actions, lr=1e-3, gamma=0.9,
-                 temporal_mode="frame_stack", nb_frames=4):
+                 temporal_mode="time", nb_frames=8):
         """
         @param observation_shape: shape the environment frame
         @param n_actions: Number of possible actions
