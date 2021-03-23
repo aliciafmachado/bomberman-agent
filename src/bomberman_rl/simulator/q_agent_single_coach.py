@@ -1,4 +1,5 @@
 from .base_simulator import BaseSimulator
+import pickle
 
 
 class QAgentSingleCoach(BaseSimulator):
@@ -12,8 +13,8 @@ class QAgentSingleCoach(BaseSimulator):
                  gamma=0.95,
                  exploration_factor=0.3,
                  max_steps=int(1e3),
-                 show_each=1000,
-                 nb_passes=10000,
+                 show_each=10000,
+                 nb_passes=100000,
                  fps=10):
         """
         :param env: The environment to be used
@@ -48,11 +49,17 @@ class QAgentSingleCoach(BaseSimulator):
         # Switch agent to train mode
         self.__agent.switch_mode("train")
 
+        rewards = []
+
         for i in range(self.__nb_passes):
             if not i % self.__show_each:
-                self.__run_single_simulation(self._display)
+                rewards.append(self.__run_single_simulation(self._display))
             else:
-                self.__run_single_simulation("none")
+                rewards.append(self.__run_single_simulation("none"))
+
+        # Saving reward history
+        with open("rewards_q_agent.pickle", 'wb') as handle:
+            pickle.dump(rewards, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         # Switch agent to test mode
         self.__agent.switch_mode("eval")
@@ -61,6 +68,7 @@ class QAgentSingleCoach(BaseSimulator):
         """
         Does one simulation pass until the agent breaks all of the blocks or until it dies
         :param display: The kind of display to show intermediary this simulation
+        :return: reward for simulation
         """
 
         observation = self._env.reset()
@@ -71,15 +79,20 @@ class QAgentSingleCoach(BaseSimulator):
         self.__action = self.__agent.choose_action(observation, self.__exploration_factor)
         self.__done = False
 
+        # Record reward for epoch
+        cumulative_reward = 0
+
         for i in range(self.__max_steps):
             # Check if it's already over
             if self.__done:
                 self.__render(display, "End of game")
                 # print(self.__agent.get_q_table_size())
-                return
+                return cumulative_reward
 
             # Perform last action
             observation, reward, self.__done, _ = self._env.step(self.__action)
+
+            cumulative_reward += reward
 
             # Get new action
             self.__action = self.__agent.choose_action(observation, self.__exploration_factor)
@@ -91,6 +104,8 @@ class QAgentSingleCoach(BaseSimulator):
             self.__render(display, (i, reward, self.__agent.get_q_table_size()))
 
         self.__render(display, "End of game")
+
+        return cumulative_reward
 
     def __render(self, display, info):
         # TODO mode this method to renderer
