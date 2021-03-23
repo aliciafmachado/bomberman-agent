@@ -6,7 +6,7 @@ import torchvision.transforms as transforms
 
 from bomberman_rl.simulator.base_simulator import BaseSimulator
 from bomberman_rl.agent.dqn_agent import DQNAgent
-from bomberman_rl.memory.replay_memory import ReplayMemory, Simulation
+from bomberman_rl.memory.prioritized_replay_memory import PrioritizedReplayMemory
 
 
 class DQNAgentSingleCoach(BaseSimulator):
@@ -41,7 +41,7 @@ class DQNAgentSingleCoach(BaseSimulator):
         self.__target_update = 10
         self.__transform = transforms.ToTensor()
         self.__memory_size = 10000
-        self.__memory = ReplayMemory(self.__memory_size)
+        self.__memory = PrioritizedReplayMemory(self.__memory_size)
 
     def run(self):
         """
@@ -127,9 +127,7 @@ class DQNAgentSingleCoach(BaseSimulator):
             time = next_time
 
             if len(self.__memory) >= self.__batch_size:
-                sample = self.__memory.sample(self.__batch_size)
-                batch = Simulation(*zip(*sample))
-                loss = self.__agent.train(batch, self.__batch_size)
+                loss = self.__agent.train(self.__memory, self.__batch_size)
 
                 if self.__plot_loss:
                     self.losses.append(loss)
