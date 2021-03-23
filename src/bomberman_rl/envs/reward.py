@@ -9,13 +9,15 @@ class Reward(object):
 
     # reward values
     rewards = {
-        'visited_cell': -0.04,
+        'visited_cell': 0.0,
         'new_cell': 0.04,
-        'illegal_movement': -0.75,
-        'no_obstacles_destroyed': -0.8,
+        'illegal_movement': -0.2,
+        'no_obstacles_destroyed': -0.1,
         'destroy_block': 1,
-        'death': -1,
+        'death': -0.5,
         'kill_reward': 1,
+        'place_bomb': 0.0,
+        'will_destroy_block': 0.1,
     }
 
     def __init__(self):
@@ -32,11 +34,11 @@ class Reward(object):
         position = agent.get_pos()
         self._visited_cells.add(tuple(position))
 
+        dirr = agent.dir_dict[action]
+
+        next_pos = position + dirr
         if action not in (STOP, PLACE_BOMB):
             # Get direction caused by the action
-            dirr = agent.dir_dict[action]
-
-            next_pos = position + dirr
             candidate_pos_objects = world[next_pos[0], next_pos[1]]
             obstacles = FIXED_BLOCK, BLOCK, BOMB
             # Check for collision with blocks/bomb
@@ -53,14 +55,21 @@ class Reward(object):
 
         # check if position more bombs that allowed
         if action == PLACE_BOMB:
-            if agent.get_num_placed_bombs() == Character.bomb_limit:
-                self._reward += Reward.rewards['illegal_movement']
-                self._log['rewards'].append({'illegal_movement': Reward.rewards['illegal_movement']})                
-
+            self._reward += Reward.rewards['place_bomb']
+            self._log['rewards'].append({'place_bomb': Reward.rewards['place_bomb']})                
         # Check if there's fire in the next position
-        if world[position[0], position[1], FIRE]:
+        if world[next_pos[0], next_pos[1], FIRE]:
             self._reward += Reward.rewards['death']
             self._log['rewards'].append({'death': Reward.rewards['death']})
+
+    def add_illegal_movement_reward(self):
+        self._reward += Reward.rewards['illegal_movement']
+        self._log['rewards'].append({'illegal_movement': Reward.rewards['illegal_movement']})
+
+    def add_will_break_block_reward(self):
+        self._reward = Reward.rewards['will_destroy_block']
+        self._log['rewards'].append(
+            {'will_destroy_block': Reward.rewards['will_destroy_block']})     
 
     def add_kill_reward(self):
         self._reward += Reward.rewards['kill_reward']
@@ -74,7 +83,7 @@ class Reward(object):
         self._reward += Reward.rewards['no_obstacles_destroyed']
         self._log['rewards'].append({'no_obstacles_destroyed': Reward.rewards['no_obstacles_destroyed']})
 
-    def getReward(self):
+    def get_reward(self):
         return self._reward
 
     def reset_reward(self):
