@@ -1,4 +1,5 @@
 import numpy as np
+import pickle
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
@@ -56,12 +57,18 @@ class A2CSingleCoach(BaseSimulator):
         params = self.__agent.get_policy_params()
         self.__optimizer = optim.Adam(params, lr=1e-4)
 
+        rewards = []
+
         # Rolling out passes
         for i in range(self.__nb_passes):
             if not i % self.__show_each:
-                self.__run_single_simulation(self._display)
+                rewards.append(self.__run_single_simulation(self._display))
             else:
-                self.__run_single_simulation("none")
+                rewards.append(self.__run_single_simulation("none"))
+
+        # Saving reward history
+        with open("rewards_a2c_agent.pickle", 'wb') as handle:
+            pickle.dump(rewards, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         # Switch agent back to evaluation mode
         self.__agent.switch_mode("eval")
@@ -93,6 +100,8 @@ class A2CSingleCoach(BaseSimulator):
             # Check if it's already over
             if not np.any(observation[:, :, BLOCK]) or done:
                 break
+
+        pass_sum = sum(pass_rewards)
 
         # Calculating the discounted rewards
         R = 0
@@ -127,6 +136,8 @@ class A2CSingleCoach(BaseSimulator):
         self.__optimizer.step()
         if display == "none":
             print(loss)
+
+        return pass_sum
 
     def __render(self, display, info):
         # TODO mode this method to renderer
