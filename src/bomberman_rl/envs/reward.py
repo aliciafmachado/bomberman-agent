@@ -9,12 +9,12 @@ class Reward(object):
 
     # reward values
     rewards = {
-        'visited_cell': -0.04,
+        'visited_cell': 0.0,
         'new_cell': 0.04,
-        'illegal_movement': -0.75,
-        'no_obstacles_destroyed': -0.8,
+        'illegal_movement': -0.2,
+        'no_obstacles_destroyed': -0.05,
         'destroy_block': 1,
-        'death': -1,
+        'death': -0.5,
         'kill_reward': 1,
     }
 
