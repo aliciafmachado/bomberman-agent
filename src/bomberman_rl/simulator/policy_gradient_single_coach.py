@@ -53,7 +53,7 @@ class PolicyGradientSingleCoach(BaseSimulator):
 
         # Setting up optimizer
         params = self.__agent.get_policy_params()
-        self.__optimizer = optim.Adam(params, lr=1e-5)
+        self.__optimizer = optim.Adam(params, lr=1e-4)
 
         # Rolling out passes
         for i in range(self.__nb_passes):
@@ -70,7 +70,6 @@ class PolicyGradientSingleCoach(BaseSimulator):
         Does one simulation pass until the agent breaks all of the blocks or until it dies
         :param display: The kind of display to show intermediary this simulation
         """
-
         observation = self._env.reset()
         self.__agent.reset()
         pass_rewards = []
@@ -81,7 +80,7 @@ class PolicyGradientSingleCoach(BaseSimulator):
             action = self.__agent.choose_action(observation)
 
             # Getting environment's response
-            observation, reward, done, _ = self._env.step(  action)
+            observation, reward, done, _ = self._env.step(action)
 
             # Recording the rewards for this pass
             pass_rewards.append(reward)

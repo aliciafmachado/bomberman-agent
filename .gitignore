@@ -134,3 +134,7 @@ dmypy.json
 
 # Trained agents
 *.pickle
+
+# Plots
+*.png
+!src/assets/*.png

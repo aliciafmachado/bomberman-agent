@@ -9,20 +9,20 @@ class SingleAgentSimulator(BaseSimulator):
     """
     Plays a single agent on the screen
     """
-    def __init__(self, env_name, agent,
+    def __init__(self, env, agent,
                  display="stdout",
                  nb_runs=1,
                  max_steps=int(1e3),
-                 fps=1):
+                 fps=3):
         """
-        :param env_name: The name of the environment to be used
+        :param env: The environment to be used
         :param agent: The agent to be trained
         :param display: if you wish to show the result of the training
         :param nb_runs: the total number of game simulations to be run
         :param max_steps: the maximum number of steps a run simulation can take
         :param fps: if display is not none the fps of teh simulation to be shown
         """
-        super().__init__(env_name, display)
+        super().__init__(env, display)
 
         # Initialize internal variables
         self.__agent = agent
@@ -57,7 +57,7 @@ class SingleAgentSimulator(BaseSimulator):
 
         for i in range(self.__max_steps):
             # Check if it's already over
-            if not np.any(observation[:, :, BLOCK]) or self.__done:
+            if self.__done:
                 return
 
             # Perform last action
