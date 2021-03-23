@@ -1,13 +1,12 @@
 import torch
 from torch.distributions import Categorical
 from .trainable_agent import TrainableAgent
-from .models.policy_model import Policy
 from .models.actor_critic_model import ActorCritic
 from bomberman_rl.envs.conventions import PLACE_BOMB, STOP
 import torchvision.transforms as transforms
 
 
-class PolicyGradientAgent(TrainableAgent):
+class A2CAgent(TrainableAgent):
     def __init__(self, height, width):
         super().__init__()
         self.__policy = ActorCritic(height, width, n_dim=5, time_size=9 + 1,

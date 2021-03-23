@@ -6,9 +6,9 @@ from bomberman_rl.envs.conventions import BLOCK
 from .base_simulator import BaseSimulator
 
 
-class PolicyGradientSingleCoach(BaseSimulator):
+class A2CSingleCoach(BaseSimulator):
     """
-    Teaches a single PolicyGradientAgent to play alone
+    Teaches a single A2C to play alone
     """
 
     def __init__(self, env_name, agent,

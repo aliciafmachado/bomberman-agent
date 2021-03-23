@@ -159,7 +159,7 @@ class BombermanEnv(gym.Env):
                (self.n_agents == 1 and done > 0)
         rewards = rewards[0] if self.n_agents == 1 else rewards
 
-        return self.__build_observation().flatten(), rewards, done, {}
+        return self.__build_observation(), rewards, done, {}
 
     def reset(self, new_map: bool = False) -> Union[NDArray, List[NDArray]]:
         """
@@ -177,7 +177,7 @@ class BombermanEnv(gym.Env):
         self.game_objects, self.character_layers = self.__init_game_objects()
         self.renderer.reset(self.map, self.character_layers, self.game_objects)
 
-        return self.__build_observation().flatten()
+        return self.__build_observation()
 
     def render(self, mode: str = 'human', steps_per_sec: int = 2,
                debug_text: Optional[str] = None):
