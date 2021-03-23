@@ -12,12 +12,12 @@ class Reward(object):
         'visited_cell': 0.0,
         'new_cell': 0.04,
         'illegal_movement': -0.2,
-        'no_obstacles_destroyed': -0.05,
-        'will_destroy_block': 0.1,
+        'no_obstacles_destroyed': -0.3,
+        'will_destroy_block': 0.0,
         'destroy_block': 1,
-        'death': -0.5,
+        'death': -1,
         'kill_reward': 1,
-        'place_bomb': 0.0,
+        'place_bomb': 0.2,
     }
 
     def __init__(self):
