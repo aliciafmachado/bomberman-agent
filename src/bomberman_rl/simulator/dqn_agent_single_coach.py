@@ -16,7 +16,7 @@ class DQNAgentSingleCoach(BaseSimulator):
 
     def __init__(self, env: gym.Env, agent: DQNAgent, n_episodes=10000, display='human',
                  batch_size=32, exploration_init=0.99, exploration_end=0.2,
-                 exploration_decay=1000, intrinsic_reward_beta=0.05, max_steps=50,
+                 exploration_decay=1000, use_ngu=True, max_steps=50,
                  show_each=1000, fps=10, plot_loss=False, plot_rewards=False):
         super().__init__(env, display)
 
@@ -27,7 +27,6 @@ class DQNAgentSingleCoach(BaseSimulator):
         self.__exploration_init = exploration_init
         self.__exploration_end = exploration_end
         self.__exploration_decay = exploration_decay
-        self.__intrinsic_reward_beta = intrinsic_reward_beta
         self.__max_steps = max_steps
         self.__show_each = show_each
         self.__n_episodes = n_episodes
@@ -44,7 +43,7 @@ class DQNAgentSingleCoach(BaseSimulator):
         self.__memory_size = 10000
         self.__memory = PrioritizedReplayMemory(self.__memory_size)
 
-        self.__states_count = {}
+        self.__use_ngu = use_ngu
 
     def run(self):
         """
@@ -90,6 +89,10 @@ class DQNAgentSingleCoach(BaseSimulator):
         time = torch.tensor([0], device=device)
         cum_reward = 0
 
+        if self.__use_ngu:
+            flatten_obs = observation.flatten()
+            episodic_memory = [flatten_obs / flatten_obs.sum().sqrt()]
+
         for i in range(self.__max_steps):
             # Check if it's already over
             if done:
@@ -118,13 +121,27 @@ class DQNAgentSingleCoach(BaseSimulator):
             next_state[:,5*(self.__nb_frames-1):5*(self.__nb_frames),:,:] = next_observation
 
             cum_reward += reward
-            hash = (tuple(observation.numpy().flatten()), int(action)).__hash__()
-            if hash in self.__states_count:
-                self.__states_count[hash] += 1
-            else:
-                self.__states_count[hash] = 1
-            intrinsic_reward = self.__intrinsic_reward_beta / np.sqrt(
-                self.__states_count[hash])
+
+            intrinsic_reward = 0
+            if self.__use_ngu:
+                # https://github.com/Coac/never-give-up/blob/main/embedding_model.py
+                flatten_nextobs = next_observation.flatten()
+                flatten_nextobs = flatten_nextobs / flatten_nextobs.sum().sqrt()
+                state_dist = [torch.dist(c_observation, flatten_nextobs)
+                              for c_observation in episodic_memory]
+                episodic_memory.append(flatten_nextobs)
+                state_dist.sort()
+                state_dist = state_dist[:10]
+                dist = [d.item() for d in state_dist]
+                dist = np.array(dist)
+                dist = dist / np.mean(dist)
+                dist = np.clip(dist - 0.008, 0, np.inf)
+
+                kernel = 0.0001 / (dist + 0.0001)
+                s = np.sqrt(np.sum(kernel)) + 0.001
+
+                if not np.isnan(s) and s <= 8:
+                    intrinsic_reward = 0.0001 / s
 
             reward = torch.tensor([reward + float(intrinsic_reward)], device=device)
 
