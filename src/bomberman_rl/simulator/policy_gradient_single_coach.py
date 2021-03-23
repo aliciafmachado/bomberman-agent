@@ -1,4 +1,5 @@
 import numpy as np
+import pickle
 import torch
 import torch.optim as optim
 from bomberman_rl.envs.conventions import BLOCK
@@ -55,12 +56,18 @@ class PolicyGradientSingleCoach(BaseSimulator):
         params = self.__agent.get_policy_params()
         self.__optimizer = optim.Adam(params, lr=1e-4)
 
+        rewards = []
+
         # Rolling out passes
         for i in range(self.__nb_passes):
             if not i % self.__show_each:
-                self.__run_single_simulation(self._display)
+                rewards.append(self.__run_single_simulation(self._display))
             else:
-                self.__run_single_simulation("none")
+                rewards.append(self.__run_single_simulation("none"))
+
+        # Saving reward history
+        with open("rewards_reinforce_agent.pickle", 'wb') as handle:
+            pickle.dump(rewards, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         # Switch agent back to evaluation mode
         self.__agent.switch_mode("eval")
@@ -92,6 +99,8 @@ class PolicyGradientSingleCoach(BaseSimulator):
             if not np.any(observation[:, :, BLOCK]) or done:
                 break
 
+        sum_pass = sum(pass_rewards)
+
         # Calculating the discounted rewards
         R = 0
         returns = []
@@ -113,6 +122,8 @@ class PolicyGradientSingleCoach(BaseSimulator):
         print(policy_loss)
         policy_loss.backward()
         self.__optimizer.step()
+
+        return sum_pass
 
     def __render(self, display, info):
         # TODO mode this method to renderer

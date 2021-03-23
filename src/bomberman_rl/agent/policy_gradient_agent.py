@@ -5,7 +5,6 @@ from .models.policy_model import Policy
 from bomberman_rl.envs.conventions import PLACE_BOMB, STOP
 
 
-
 class PolicyGradientAgent(TrainableAgent):
     def __init__(self, height, width):
         super().__init__()
