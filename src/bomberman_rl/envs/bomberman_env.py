@@ -195,7 +195,8 @@ class BombermanEnv(gym.Env):
                             self.rewards[fire.get_owner().get_idx()].add_kill_reward()
 
         reward_value = [self.rewards[i].get_reward() for i in range(self.n_agents)]
-
+        #for r in self.rewards:
+        #    r.showReward()
         # Adjust for single agent
         if self.n_agents > 1:
             done = n_dead >= self.n_agents - 1
