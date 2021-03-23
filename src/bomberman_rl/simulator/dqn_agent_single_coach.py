@@ -16,8 +16,8 @@ class DQNAgentSingleCoach(BaseSimulator):
 
     def __init__(self, env: gym.Env, agent: DQNAgent, n_episodes=10000, display='human',
                  batch_size=32, exploration_init=0.99, exploration_end=0.2,
-                 exploration_decay=1000, max_steps=50, show_each=1000, fps=10,
-                 plot_loss=False, plot_rewards=False):
+                 exploration_decay=1000, intrinsic_reward_beta=0.05, max_steps=50,
+                 show_each=1000, fps=10, plot_loss=False, plot_rewards=False):
         super().__init__(env, display)
 
         # Initialize internal variables
@@ -27,6 +27,7 @@ class DQNAgentSingleCoach(BaseSimulator):
         self.__exploration_init = exploration_init
         self.__exploration_end = exploration_end
         self.__exploration_decay = exploration_decay
+        self.__intrinsic_reward_beta = intrinsic_reward_beta
         self.__max_steps = max_steps
         self.__show_each = show_each
         self.__n_episodes = n_episodes
@@ -42,6 +43,8 @@ class DQNAgentSingleCoach(BaseSimulator):
         self.__transform = transforms.ToTensor()
         self.__memory_size = 10000
         self.__memory = PrioritizedReplayMemory(self.__memory_size)
+
+        self.__states_count = {}
 
     def run(self):
         """
@@ -115,7 +118,15 @@ class DQNAgentSingleCoach(BaseSimulator):
             next_state[:,5*(self.__nb_frames-1):5*(self.__nb_frames),:,:] = next_observation
 
             cum_reward += reward
-            reward = torch.tensor([reward], device=device)
+            hash = (tuple(observation.numpy().flatten()), int(action)).__hash__()
+            if hash in self.__states_count:
+                self.__states_count[hash] += 1
+            else:
+                self.__states_count[hash] = 1
+            intrinsic_reward = self.__intrinsic_reward_beta / np.sqrt(
+                self.__states_count[hash])
+
+            reward = torch.tensor([reward + float(intrinsic_reward)], device=device)
 
             # Store the transition in memory
             self.__memory.push(state, action, next_state, reward, time,
