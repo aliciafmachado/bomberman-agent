@@ -42,17 +42,17 @@ class DQNModel(nn.Module):
         )
 
         # We calculate the dimensions after the convolutional layers
-        linear_input_size = 64 * conv2d_output(observation_shape[0]) * conv2d_output(
-            observation_shape[1])
-        
+        linear_input_size = 64 * conv2d_output(
+            conv2d_output(observation_shape[0], 1, 2), 1, 2) * conv2d_output(
+            conv2d_output(observation_shape[1], 1, 2), 1, 2)
+
         # The linear layer that will return the output
         self.time_size = time_size
 
         if temporal_mode == "time":
-            self.linear = nn.Linear(778, 200)  
-
+            self.linear = nn.Linear(linear_input_size + self.time_size, 200)
         else:  
-            self.linear = nn.Linear(778 - self.time_size, 200)
+            self.linear = nn.Linear(linear_input_size, 200)
         
         self.linear2 = nn.Linear(200, 50)
         self.linear3 = nn.Linear(50, n_actions)
