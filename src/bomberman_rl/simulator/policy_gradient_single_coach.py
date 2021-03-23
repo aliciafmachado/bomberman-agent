@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.optim as optim
+import torch.nn.functional as F
 from bomberman_rl.envs.conventions import BLOCK
 from .base_simulator import BaseSimulator
 
@@ -53,7 +54,7 @@ class PolicyGradientSingleCoach(BaseSimulator):
 
         # Setting up optimizer
         params = self.__agent.get_policy_params()
-        self.__optimizer = optim.Adam(params, lr=1e-5)
+        self.__optimizer = optim.Adam(params, lr=1e-4)
 
         # Rolling out passes
         for i in range(self.__nb_passes):
@@ -81,7 +82,7 @@ class PolicyGradientSingleCoach(BaseSimulator):
             action = self.__agent.choose_action(observation)
 
             # Getting environment's response
-            observation, reward, done, _ = self._env.step(  action)
+            observation, reward, done, _ = self._env.step(action)
 
             # Recording the rewards for this pass
             pass_rewards.append(reward)
@@ -103,17 +104,29 @@ class PolicyGradientSingleCoach(BaseSimulator):
         returns = (returns - returns.mean()) / (returns.std() + self.__eps)
 
         # Calculate the losses for current rollout
-        policy_loss = []
-        for log_prob, R in zip(self.__agent.get_log_probs_history(), returns):
-            policy_loss.append(-log_prob * R)
+        policy_losses = []
+        value_losses = []
+        log_probs_history, values_history = self.__agent.get_log_actions_history()
+        for log_prob, value, R in zip(log_probs_history, values_history, returns):
+            advantage = R - value.item()
 
-        # Learning from experience
+            # Calculate actor (policy) loss
+            policy_losses.append(-log_prob * advantage)
+
+            # Calculate critic (value) loss using L1 smooth loss
+            value_losses.append(F.smooth_l1_loss(value.view(-1), torch.tensor([R])))
+
+        # Reset gradients
         self.__optimizer.zero_grad()
-        policy_loss = torch.cat(policy_loss).sum()
-        # if display == "none":
-        print(policy_loss)
-        policy_loss.backward()
+
+        # sum up all the values of policy_losses and value_losses
+        loss = torch.stack(policy_losses).sum() + torch.stack(value_losses).sum()
+
+        # Perform backprop
+        loss.backward()
         self.__optimizer.step()
+        if display == "none":
+            print(loss)
 
     def __render(self, display, info):
         # TODO mode this method to renderer
