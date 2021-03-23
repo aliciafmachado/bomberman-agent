@@ -13,6 +13,7 @@ class Reward(object):
         'new_cell': 0.04,
         'illegal_movement': -0.2,
         'no_obstacles_destroyed': -0.05,
+        'will_destroy_block': 0.1,
         'destroy_block': 1,
         'death': -0.5,
         'kill_reward': 1,
@@ -51,21 +52,24 @@ class Reward(object):
                 self._reward += Reward.rewards['illegal_movement']
                 self._log['rewards'].append({'illegal_movement': Reward.rewards['illegal_movement']})
 
-        # check if position more bombs that allowed
-        if action == PLACE_BOMB:
-            if agent.get_num_placed_bombs() == Character.bomb_limit:
-                self._reward += Reward.rewards['illegal_movement']
-                self._log['rewards'].append({'illegal_movement': Reward.rewards['illegal_movement']})                
-
         # Check if there's fire in the next position
         if world[position[0], position[1], FIRE]:
             self._reward += Reward.rewards['death']
             self._log['rewards'].append({'death': Reward.rewards['death']})
 
+    def add_illegal_movement_reward(self):
+        self._reward += Reward.rewards['illegal_movement']
+        self._log['rewards'].append({'illegal_movement': Reward.rewards['illegal_movement']})
+
     def add_kill_reward(self):
         self._reward += Reward.rewards['kill_reward']
         self._log['rewards'].append({'kill_reward': Reward.rewards['kill_reward']})
-    
+
+    def add_will_break_block_reward(self):
+        self._reward = Reward.rewards['will_destroy_block']
+        self._log['rewards'].append(
+            {'will_destroy_block': Reward.rewards['will_destroy_block']})
+
     def add_broken_block_reward(self):
         self._reward += Reward.rewards['destroy_block']
         self._log['rewards'].append({'destroy_block': Reward.rewards['destroy_block']})
@@ -74,7 +78,7 @@ class Reward(object):
         self._reward += Reward.rewards['no_obstacles_destroyed']
         self._log['rewards'].append({'no_obstacles_destroyed': Reward.rewards['no_obstacles_destroyed']})
 
-    def getReward(self):
+    def get_reward(self):
         return self._reward
 
     def reset_reward(self):
