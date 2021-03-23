@@ -106,11 +106,14 @@ class DQNAgentSingleCoach(BaseSimulator):
 
             next_state = state.clone()
             for i in range(self.__nb_frames - 1):
-                # TODO:change 5
-                next_state[:,5*i:5*(i+1),:,:] = next_state[:,5*(i+1):5*(i+2),:,:]
+                # z_obs is how many grids we receive in our environment
+                z_obs = self._env.observation_space.shape[2]
+                
+                next_state[:,z_obs*i:z_obs*(i+1),:,:] = \
+                    next_state[:,z_obs*(i+1):z_obs*(i+2),:,:]
             
             next_state[:,5*(self.__nb_frames-1):5*(self.__nb_frames),:,:] = next_observation
-    
+
             cum_reward += reward
             reward = torch.tensor([reward], device=device)
 

@@ -35,7 +35,7 @@ class DQNAgent(TrainableAgent):
             self.nb_frames = nb_frames
 
         else:
-            raise ValueError('Invalid temporal mode: {:}. Please use frame-stack, time or None.'
+            raise ValueError('Invalid temporal mode: {:}. Please use frame_stack, time or None.'
                 .format(temporal_mode))
 
         # Calculate frame stack shape
