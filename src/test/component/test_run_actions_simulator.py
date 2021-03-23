@@ -1,9 +1,11 @@
+import gym
 from bomberman_rl.simulator.run_actions_simulator import RunActionsSimulator
 from bomberman_rl.envs.conventions import UP, LEFT, RIGHT, DOWN, STOP, PLACE_BOMB
 
 actions = [STOP, DOWN, DOWN, PLACE_BOMB, STOP, STOP, STOP, STOP, STOP, STOP]
 
-simulator = RunActionsSimulator("bomberman_rl:bomberman-default-v0", actions, 1)
+env = gym.make("bomberman_rl:bomberman-default-v0")
+simulator = RunActionsSimulator(env, actions, 1)
 simulator.run()
 
 actions = [STOP, DOWN, DOWN, PLACE_BOMB, RIGHT, STOP, STOP, STOP, STOP, STOP, STOP, STOP]

@@ -1,4 +1,5 @@
 import argparse
+import gym
 from bomberman_rl.simulator.single_agent_simulator import SingleAgentSimulator
 from bomberman_rl.agent.trainable_agent import TrainableAgent
 
@@ -12,6 +13,7 @@ args = parser.parse_args()
 
 # Loading agent and running simulation
 agent = TrainableAgent.load(args.agent_path, args.agent_name)
-simulator = SingleAgentSimulator(args.environment, agent, "human")
+env = gym.make(args.environment)
+simulator = SingleAgentSimulator(env, agent, "human")
 
 simulator.run()

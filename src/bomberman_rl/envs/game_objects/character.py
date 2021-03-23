@@ -23,12 +23,8 @@ class Character(GameObject):
                 RIGHT: np.array([0, 1], dtype=np.int8),
                 DOWN: np.array([1, 0], dtype=np.int8),
                 UP: np.array([-1, 0], dtype=np.int8)}
+
     bomb_limit = 1
-    alive_reward = 0
-    block_break_reward = 0.5
-    bomb_reward = 0
-    dead_reward = -0.1
-    kill_reward = 1000
 
     def __init__(self, pos: NDArray[np.int8], idx: int):
         """
@@ -47,7 +43,6 @@ class Character(GameObject):
         self.__block_break_cumulative_reward = 0
         self.__animation_idx_death = 0
         self.__placed_bombs = 0
-        self.__bomb_reward = 0
 
     def update(self, action: int, world: NDArray[bool], world_layer: NDArray[bool]) -> \
             Tuple[bool, int]:
@@ -68,7 +63,7 @@ class Character(GameObject):
         self.__stopped = True
 
         if self.__dead:
-            return False, self.__get_reward()
+            return False
 
         # If player needs to move and it's able to move
         if action not in (STOP, PLACE_BOMB):
@@ -88,11 +83,11 @@ class Character(GameObject):
         if world[self._pos[0], self._pos[1], FIRE]:
             self.__dead = True
             self.__just_died = True
-            return False, self.__get_reward()
+            return False
 
         world_layer[self._pos[0], self._pos[1]] = True
 
-        return True, self.__get_reward()
+        return True
 
     def render(self, display: pygame.display, sprites_factory: SpritesFactory,
                frames_per_step: int):
@@ -149,15 +144,11 @@ class Character(GameObject):
     def get_idx(self) -> int:
         return self.__idx
 
-    def break_block(self):
-        self.__block_break_cumulative_reward += Character.block_break_reward
-
     def can_place_bomb(self) -> bool:
         return self.__placed_bombs < Character.bomb_limit
 
     def place_bomb(self):
         self.__placed_bombs += 1
-        self.__bomb_reward = Character.bomb_reward
 
     def bomb_exploded(self):
         self.__placed_bombs -= 1
@@ -165,12 +156,8 @@ class Character(GameObject):
     def just_died(self) -> bool:
         return self.__just_died
 
-    def __get_reward(self):
-        if self.__dead:
-            self.__block_break_cumulative_reward = 0
-            return Character.dead_reward
-        else:
-            reward = self.__block_break_cumulative_reward + self.__bomb_reward
-            self.__block_break_cumulative_reward = 0
-            self.__bomb_reward = 0
-            return Character.alive_reward + reward
+    def is_dead(self):
+        return self.__dead
+    
+    def get_num_placed_bombs(self):
+        return self.__placed_bombs

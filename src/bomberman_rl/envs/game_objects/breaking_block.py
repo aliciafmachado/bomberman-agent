@@ -2,6 +2,7 @@ from nptyping import NDArray
 import numpy as np
 import os
 
+from bomberman_rl.envs.game_objects.fire import Fire
 from bomberman_rl.envs.conventions import BLOCK, BLOCK_SIZE
 from bomberman_rl.envs.sprites_factory import SpritesFactory
 from bomberman_rl.envs.game_objects.game_object import GameObject
@@ -37,7 +38,8 @@ class BreakingBlock(GameObject):
         # Get correct animation sprite
         sprite_name = 'block_destroyed'
         sprite_name += str(self.__animation_list[self.__animation_idx])  # Animation frame
-        self.__animation_idx += 1
+        self.__animation_idx = min(self.__animation_idx + 1,
+                                   len(self.__animation_list) - 1)
 
         # Draw sprite
         display.blit(sprites_factory[sprite_name], (self._pos[1] * BLOCK_SIZE,

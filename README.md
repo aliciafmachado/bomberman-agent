@@ -2,8 +2,29 @@
 
 ### Install procedure
 
+Make sure that you are in the same folder as the `setup.py`
+
 ```
 pip install -e .
+```
+
+### Demos
+
+##### Train and run Q-agent in very small environment
+
+In this demo you'll train a Q-learning agent to destroy all blocks in our smallest environment
+
+First, go to the scripts folder:
+
+```
+cd src/scripts
+```
+
+Then, train and run the trained agent:
+
+```
+python train_q_agent.py --agent-name qagent --environment bomberman_rl:bomberman-minimal-v0 --display human
+python simulate_single_agent.py --agent-name qagent --environment bomberman_rl:bomberman-minimal-v0
 ```
 
 ### Train a single QAgent
