@@ -12,12 +12,12 @@ class Reward(object):
         'visited_cell': 0.0,
         'new_cell': 0.04,
         'illegal_movement': -0.2,
-        'no_obstacles_destroyed': -0.1,
+        'no_obstacles_destroyed': -0.05,
+        'will_destroy_block': 0.1,
         'destroy_block': 1,
         'death': -0.5,
         'kill_reward': 1,
         'place_bomb': 0.0,
-        'will_destroy_block': 0.1,
     }
 
     def __init__(self):
@@ -52,7 +52,6 @@ class Reward(object):
             else:
                 self._reward += Reward.rewards['illegal_movement']
                 self._log['rewards'].append({'illegal_movement': Reward.rewards['illegal_movement']})
-
         # check if position more bombs that allowed
         if action == PLACE_BOMB:
             self._reward += Reward.rewards['place_bomb']
@@ -66,15 +65,15 @@ class Reward(object):
         self._reward += Reward.rewards['illegal_movement']
         self._log['rewards'].append({'illegal_movement': Reward.rewards['illegal_movement']})
 
-    def add_will_break_block_reward(self):
-        self._reward = Reward.rewards['will_destroy_block']
-        self._log['rewards'].append(
-            {'will_destroy_block': Reward.rewards['will_destroy_block']})     
-
     def add_kill_reward(self):
         self._reward += Reward.rewards['kill_reward']
         self._log['rewards'].append({'kill_reward': Reward.rewards['kill_reward']})
-    
+
+    def add_will_break_block_reward(self):
+        self._reward = Reward.rewards['will_destroy_block']
+        self._log['rewards'].append(
+            {'will_destroy_block': Reward.rewards['will_destroy_block']})
+
     def add_broken_block_reward(self):
         self._reward += Reward.rewards['destroy_block']
         self._log['rewards'].append({'destroy_block': Reward.rewards['destroy_block']})

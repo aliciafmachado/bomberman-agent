@@ -107,6 +107,19 @@ class BombermanEnv(gym.Env):
                     bomb = Bomb(pos, agent, self.bomb_duration)
                     self.game_objects['bombs'].append(bomb)
 
+                    # Reward if it will break blocks
+                    dirs = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+                    for d in dirs:
+                        for r in range(self.fire_range):
+                            tile = self.map[pos[0] + r * d[0], pos[1] + r * d[1]]
+                            if tile[FIXED_BLOCK]:
+                                break
+                            elif tile[BLOCK] or tile[BOMB]:
+                                self.rewards[agent_idx].add_will_break_block_reward()
+                                break
+            elif action[agent_idx] == PLACE_BOMB:
+                self.rewards[agent_idx].add_illegal_movement_reward()
+
         # Update bombs
         bomb_pos = {
             tuple(bomb.get_pos()): bomb for bomb in self.game_objects['bombs']
@@ -180,8 +193,8 @@ class BombermanEnv(gym.Env):
                     if tuple(agent.get_pos()) in fire.get_occupied_tiles():
                         if not fire.get_owner().just_died():
                             self.rewards[fire.get_owner().get_idx()].add_kill_reward()
-                            
-        reward_value = [self.rewards[i].getReward() for i in range(self.n_agents)]
+
+        reward_value = [self.rewards[i].get_reward() for i in range(self.n_agents)]
 
         # Adjust for single agent
         if self.n_agents > 1:

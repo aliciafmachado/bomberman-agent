@@ -31,6 +31,7 @@ class DQNAgentSingleCoach(BaseSimulator):
         self.__show_each = show_each
         self.__n_episodes = n_episodes
         self.__fps = fps
+        self.__nb_frames = agent.nb_frames
 
         self.__plot_loss = plot_loss
         self.losses = []
@@ -74,6 +75,11 @@ class DQNAgentSingleCoach(BaseSimulator):
         device = self.__agent.device
         observation = self._env.reset()
         observation = self.__transform(observation).unsqueeze(0).float().to(device)
+
+        state = observation.clone()
+        for i in range(self.__nb_frames - 1):
+            state = torch.cat((state, observation), dim=1)
+        
         self.__agent.reset()
         self.__render(display, None)
 
@@ -87,7 +93,7 @@ class DQNAgentSingleCoach(BaseSimulator):
                 self.__render(display, 'End of episode')
                 break
 
-            action = self.__agent.choose_action(observation, idx,
+            action = self.__agent.choose_action(state, idx,
                                                 eps_decay=self.__exploration_decay,
                                                 initial_eps=self.__exploration_init,
                                                 end_eps=self.__exploration_end)
@@ -97,15 +103,27 @@ class DQNAgentSingleCoach(BaseSimulator):
             next_observation, reward, done, _ = self._env.step(action.item())
             next_observation = self.__transform(next_observation).unsqueeze(0).float().to(
                 device)
+
+            next_state = state.clone()
+            for i in range(self.__nb_frames - 1):
+                # z_obs is how many grids we receive in our environment
+                z_obs = self._env.observation_space.shape[2]
+                
+                next_state[:,z_obs*i:z_obs*(i+1),:,:] = \
+                    next_state[:,z_obs*(i+1):z_obs*(i+2),:,:]
+            
+            next_state[:,5*(self.__nb_frames-1):5*(self.__nb_frames),:,:] = next_observation
+
             cum_reward += reward
             reward = torch.tensor([reward], device=device)
 
             # Store the transition in memory
-            self.__memory.push(observation, action, next_observation, reward, time,
+            self.__memory.push(state, action, next_state, reward, time,
                                next_time)
 
             # Next state
             observation = next_observation
+            state = next_state
             time = next_time
 
             if len(self.__memory) >= self.__batch_size:

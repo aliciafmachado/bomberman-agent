@@ -1,5 +1,6 @@
 import torch
 import random
+import numpy as np
 from torch import optim
 
 from bomberman_rl.agent.trainable_agent import TrainableAgent
@@ -16,7 +17,8 @@ class DQNAgent(TrainableAgent):
     https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
     """
 
-    def __init__(self, observation_shape, n_actions, lr=1e-3, gamma=0.9):
+    def __init__(self, observation_shape, n_actions, lr=1e-3, gamma=0.9,
+                 temporal_mode="time", nb_frames=8):
         """
         @param observation_shape: shape the environment frame
         @param n_actions: Number of possible actions
@@ -26,15 +28,29 @@ class DQNAgent(TrainableAgent):
         self.mode = None
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+        if temporal_mode == "time" or temporal_mode == None:
+            self.nb_frames = 1
+
+        elif temporal_mode == "frame_stack":
+            self.nb_frames = nb_frames
+
+        else:
+            raise ValueError('Invalid temporal mode: {:}. Please use frame_stack, time or None.'
+                .format(temporal_mode))
+
+        # Calculate frame stack shape
+        frame_stack_shape = np.array(observation_shape)
+        frame_stack_shape[-1] = frame_stack_shape[-1] * self.nb_frames
+
         # Temporary variable
         self.time_size = 10
         self.time = torch.tensor([0], device=self.device)
         self.max_time = torch.tensor([self.time_size - 1], device=self.device)
 
-        self.target_net = DQNModel(observation_shape, n_actions, time_size=self.time_size,
-                                   device=self.device)
-        self.q_net = DQNModel(observation_shape, n_actions, time_size=self.time_size,
-                              device=self.device)
+        self.target_net = DQNModel(frame_stack_shape, n_actions, time_size=self.time_size,
+                                   device=self.device, temporal_mode=temporal_mode)
+        self.q_net = DQNModel(frame_stack_shape, n_actions, time_size=self.time_size,
+                              device=self.device,temporal_mode=temporal_mode)
         self.n_actions = n_actions
         self.gamma = gamma
 
@@ -80,7 +96,7 @@ class DQNAgent(TrainableAgent):
         # Update memory weights
         state_values = self.target_net(state_batch, time_batch).max(1)[0].detach()
         errors = torch.abs(
-            state_values - expected_state_action_values).data.numpy()
+            state_values - expected_state_action_values).cpu().detach().numpy()
         memory.update_priorities(idxs, errors)
 
         loss = self.loss_fn(state_action_values,
