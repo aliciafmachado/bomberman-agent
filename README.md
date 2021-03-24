@@ -4,7 +4,8 @@
 
 ### Install procedure
 
-Make sure that you are in the same folder as the `setup.py`
+Make sure that you are in the same folder as the `setup.py`. To achieve better results we
+recommend that you use a version of Python between 3.6 and 3.8, you might encounter errors if you run using newer versions.
 
 ```
 pip install -e .
