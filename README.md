@@ -25,8 +25,10 @@ cd src/scripts
 Then, run one of the agents:
 
 ```
-python simulate_single_agent.py --agent-name qagent
 python simulate_single_agent.py --agent-name dqn_agent
+python simulate_single_agent.py --agent-name qagent
+python simulate_single_agent.py --agent-name a2c_agent
+python simulate_single_agent.py --agent-name policy_gradient_agent
 ```
 
 ##### Train agents from scratch
@@ -42,8 +44,10 @@ cd src/scripts
 Then, train one of the agents:
 
 ```
-python train_q_agent.py --agent-name qagent_new
 python train_dqn_agent.py --agent-name dqn_agent_new
+python train_q_agent.py --agent-name qagent_new
+python train_a2c_agent.py --agent-name a2c_agent_new
+python train_policy_gradient_agent.py --agent-name policy_gradient_agent_new
 ```
 
 It might be needed to train a bit more the agent, you can
@@ -52,6 +56,8 @@ continue training with one of these commands:
 ```
 python train_q_agent.py --agent-name qagent_new --agent-pretrained-name qagent_new
 python train_dqn_agent.py --agent-name dqn_agent_new --agent-pretrained-name dqn_agent_new
+python train_a2c_agent.py --agent-name a2c_agent_new --agent-pretrained-name a2c_agent_new
+python train_policy_gradient_agent.py --agent-name policy_gradient_agent_new --agent-pretrained-name policy_gradient_agent_new
 ```
 
 ### Run tests

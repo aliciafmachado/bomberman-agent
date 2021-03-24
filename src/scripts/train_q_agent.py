@@ -23,7 +23,7 @@ else:
 
 # Running train
 env = gym.make(args.environment)
-coach = QAgentSingleCoach(env, agent, args.display, nb_passes=5000)
+coach = QAgentSingleCoach(env, agent, args.display, nb_passes=5000, show_each=500)
 coach.run()
 
 # Saving result

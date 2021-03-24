@@ -134,8 +134,8 @@ class A2CSingleCoach(BaseSimulator):
         # Perform backprop
         loss.backward()
         self.__optimizer.step()
-        if display == "none":
-            print(loss)
+        # if display == "none":
+        #     print(loss)
 
         return pass_sum
 

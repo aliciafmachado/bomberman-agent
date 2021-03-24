@@ -26,7 +26,7 @@ else:
 
 # Running train
 coach = DQNAgentSingleCoach(env, agent, display=args.display, n_episodes=5000,
-                            show_each=100, max_steps=250, exploration_init=0.9,
+                            show_each=500, max_steps=250, exploration_init=0.9,
                             exploration_end=0.1, exploration_decay=400, plot_rewards=True)
 coach.run()
 

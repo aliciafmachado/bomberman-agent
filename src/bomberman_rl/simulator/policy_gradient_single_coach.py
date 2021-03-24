@@ -119,7 +119,7 @@ class PolicyGradientSingleCoach(BaseSimulator):
         self.__optimizer.zero_grad()
         policy_loss = torch.cat(policy_loss).sum()
         # if display == "none":
-        print(policy_loss)
+        # print(policy_loss)
         policy_loss.backward()
         self.__optimizer.step()
 
