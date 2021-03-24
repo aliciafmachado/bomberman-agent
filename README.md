@@ -1,6 +1,6 @@
 # Agent and environment to apply RL in the bomberman game
 
-![](src/asserts/video.gif)
+![](src/assets/video.gif)
 
 ### Install procedure
 
