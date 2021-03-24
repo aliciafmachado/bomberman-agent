@@ -18,7 +18,7 @@ agent = TrainableAgent.load(args.agent_path, args.agent_name)
 env = gym.make(args.environment)
 
 if agent.__class__ == DQNAgent:
-    coach = DQNAgentSingleCoach(env, agent, fps=3)
+    coach = DQNAgentSingleCoach(env, agent, fps=3, max_steps=250)
     coach.simulate(1)
 else:
     simulator = SingleAgentSimulator(env, agent, "human")
