@@ -10,8 +10,8 @@ parser.add_argument('--agent-path', help="path to agent file after train", defau
 parser.add_argument("--agent-pretrained-name", help="name of pretrained agent to continue training", default=None)
 parser.add_argument('--agent-pretrained-path', help="path of pretrained agent to continue training", default="./")
 parser.add_argument('--environment', help="name of the environment to be used",
-                    default="bomberman_rl:bomberman-small-v0")
-parser.add_argument("--display", help="'human' or 'stdout'", default="stdout")
+                    default="bomberman_rl:bomberman-default-v0")
+parser.add_argument("--display", help="'human' or 'stdout'", default="human")
 args = parser.parse_args()
 
 # Loading agent if needed or creating new one
@@ -23,7 +23,7 @@ else:
 
 # Running train
 env = gym.make(args.environment)
-coach = QAgentSingleCoach(env, agent, args.display)
+coach = QAgentSingleCoach(env, agent, args.display, nb_passes=5000)
 coach.run()
 
 # Saving result

@@ -13,7 +13,7 @@ coach = DQNAgentSingleCoach(env, agent, n_episodes=5000, show_each=50, max_steps
                             plot_rewards=plot_rewards)
 coach.run()
 
-agent.save('./', 'dql_agent')
+agent.save('./', 'dqn_agent')
 if plot_loss:
     coach.plot_loss()
 if plot_rewards:
