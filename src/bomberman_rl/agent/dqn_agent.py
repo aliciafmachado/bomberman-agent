@@ -4,7 +4,7 @@ import numpy as np
 from torch import optim
 
 from bomberman_rl.agent.trainable_agent import TrainableAgent
-from bomberman_rl.agent.dqn_model import DQNModel
+from bomberman_rl.agent.models.dqn_model import DQNModel
 from bomberman_rl.envs.conventions import PLACE_BOMB
 
 

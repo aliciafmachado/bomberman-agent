@@ -71,18 +71,6 @@ class ActorCritic(nn.Module):
         x1 = F.relu(self.bn3(self.conv3(x1)))
         x1 = F.relu(self.bn4(self.conv4(x1)))
         x1 = torch.cat([x1.view(x1.size(0), -1).clone().detach(),
-                       F.one_hot(timer, num_classes=self.time_size).to(self.device)], dim=1)
-
-        out = F.relu(self.linear(x1))
-        out = F.relu(self.linear2(out))
-
-        action_probs = F.softmax(self.__action_head(out), dim=-1)
-
-        x1 = F.relu(self.bn1(self.conv1(inp)))
-        x1 = F.relu(self.bn2(self.conv2(x1)))
-        x1 = F.relu(self.bn3(self.conv3(x1)))
-        x1 = F.relu(self.bn4(self.conv4(x1)))
-        x1 = torch.cat([x1.view(x1.size(0), -1).clone().detach(),
                         F.one_hot(timer, num_classes=self.time_size).to(self.device)], dim=1)
 
         out = F.relu(self.linear(x1))
